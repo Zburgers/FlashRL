@@ -1,0 +1,8 @@
+2025-05-02 21:56:37,329 - INFO - ====== WebDriver manager ======
+2025-05-02 21:56:38,511 - INFO - Get LATEST chromedriver version for google-chrome
+2025-05-02 21:56:38,515 - DEBUG - Starting new HTTPS connection (1): googlechromelabs.github.io:443
+2025-05-02 21:56:38,707 - DEBUG - https://googlechromelabs.github.io:443 "GET /chrome-for-testing/latest-patch-versions-per-build.json HTTP/1.1" 200 10900
+2025-05-02 21:56:38,722 - INFO - Get LATEST chromedriver version for google-chrome
+2025-05-02 21:56:38,725 - DEBUG - Starting new HTTPS connection (1): googlechromelabs.github.io:443
+2025-05-02 21:56:38,832 - DEBUG - https://googlechromelabs.github.io:443 "GET /chrome-for-testing/latest-patch-versions-per-build.json HTTP/1.1" 200 10900
+2025-05-02 21:56:38,840 - INFO - Driver [C:\Users\naksh\.wdm\drivers\chromedriver\win64\135.0.7049.114\chromedriver-win32/THIRD_PARTY_NOTICES.chromedriver] found in cache

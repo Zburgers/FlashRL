@@ -1,0 +1,45 @@
+2025-05-02 23:03:08,011 - DEBUG - Setting up Chrome browser...
+2025-05-02 23:03:08,042 - DEBUG - Started executable: `chromedriver-win64\chromedriver.exe` in a child process with pid: 15920
+2025-05-02 23:03:08,560 - DEBUG - POST http://localhost:57705/session {"capabilities": {"firstMatch": [{}], "alwaysMatch": {"browserName": "chrome", "pageLoadStrategy": "normal", "goog:chromeOptions": {"extensions": [], "args": ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--disable-extensions", "--window-size=800,600", "--mute-audio"]}}}}
+2025-05-02 23:03:08,562 - DEBUG - Starting new HTTP connection (1): localhost:57705
+2025-05-02 23:03:09,305 - DEBUG - http://localhost:57705 "POST /session HTTP/1.1" 200 0
+2025-05-02 23:03:09,305 - DEBUG - Remote response: status=200 | data={"value":{"capabilities":{"acceptInsecureCerts":false,"browserName":"chrome","browserVersion":"136.0.7103.49","chrome":{"chromedriverVersion":"136.0.7103.49 (031848bc6ad02b97854f3d6154d3aefd0434756a-refs/branch-heads/7103@{#1423})","userDataDir":"C:\\Users\\naksh\\AppData\\Local\\Temp\\scoped_dir15920_928102260"},"fedcm:accounts":true,"goog:chromeOptions":{"debuggerAddress":"localhost:57708"},"networkConnectionEnabled":false,"pageLoadStrategy":"normal","platformName":"windows","proxy":{},"setWindowRect":true,"strictFileInteractability":false,"timeouts":{"implicit":0,"pageLoad":300000,"script":30000},"unhandledPromptBehavior":"dismiss and notify","webauthn:extension:credBlob":true,"webauthn:extension:largeBlob":true,"webauthn:extension:minPinLength":true,"webauthn:extension:prf":true,"webauthn:virtualAuthenticators":true},"sessionId":"a4f8585d6019303c32b341e344d6e3da"}} | headers=HTTPHeaderDict({'Content-Length': '881', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:03:09,307 - DEBUG - Finished Request
+2025-05-02 23:03:09,308 - DEBUG - Chrome browser initialized successfully
+2025-05-02 23:03:09,309 - INFO - Resetting environment
+2025-05-02 23:03:09,310 - DEBUG - POST http://localhost:57705/session/a4f8585d6019303c32b341e344d6e3da/url {"url": "chrome://dino"}
+2025-05-02 23:03:09,594 - DEBUG - http://localhost:57705 "POST /session/a4f8585d6019303c32b341e344d6e3da/url HTTP/1.1" 500 0
+2025-05-02 23:03:09,596 - DEBUG - Remote response: status=500 | data={"value":{"error":"unknown error","message":"unknown error: net::ERR_INTERNET_DISCONNECTED\n  (Session info: chrome=136.0.7103.49)","stacktrace":"\tGetHandleVerifier [0x00007FF7537AA145+76773]\n\tGetHandleVerifier [0x00007FF7537AA1A0+76864]\n\t(No symbol) [0x00007FF753568F7A]\n\t(No symbol) [0x00007FF753565A2F]\n\t(No symbol) [0x00007FF753556749]\n\t(No symbol) [0x00007FF7535584B8]\n\t(No symbol) [0x00007FF753556A56]\n\t(No symbol) [0x00007FF7535564D6]\n\t(No symbol) [0x00007FF75355619A]\n\t(No symbol) [0x00007FF753553E47]\n\t(No symbol) [0x00007FF75355461C]\n\t(No symbol) [0x00007FF75356CF1A]\n\t(No symbol) [0x00007FF75360FE4E]\n\t(No symbol) [0x00007FF7535E735A]\n\t(No symbol) [0x00007FF75360F0CF]\n\t(No symbol) [0x00007FF7535E7133]\n\t(No symbol) [0x00007FF7535B04D1]\n\t(No symbol) [0x00007FF7535B1263]\n\tGetHandleVerifier [0x00007FF753A6A8ED+2962317]\n\tGetHandleVerifier [0x00007FF753A64EC2+2939234]\n\tGetHandleVerifier [0x00007FF753A82FF3+3062419]\n\tGetHandleVerifier [0x00007FF7537C4B9A+185914]\n\tGetHandleVerifier [0x00007FF7537CC78F+217647]\n\tGetHandleVerifier [0x00007FF7537B2A44+111844]\n\tGetHandleVerifier [0x00007FF7537B2BF2+112274]\n\tGetHandleVerifier [0x00007FF753798A79+5401]\n\tBaseThreadInitThunk [0x00007FFB953C259D+29]\n\tRtlUserThreadStart [0x00007FFB970EAF38+40]\n"}} | headers=HTTPHeaderDict({'Content-Length': '1307', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:03:09,598 - DEBUG - Finished Request
+2025-05-02 23:03:09,599 - ERROR - Error during reset: Message: unknown error: net::ERR_INTERNET_DISCONNECTED
+  (Session info: chrome=136.0.7103.49)
+Stacktrace:
+	GetHandleVerifier [0x00007FF7537AA145+76773]
+	GetHandleVerifier [0x00007FF7537AA1A0+76864]
+	(No symbol) [0x00007FF753568F7A]
+	(No symbol) [0x00007FF753565A2F]
+	(No symbol) [0x00007FF753556749]
+	(No symbol) [0x00007FF7535584B8]
+	(No symbol) [0x00007FF753556A56]
+	(No symbol) [0x00007FF7535564D6]
+	(No symbol) [0x00007FF75355619A]
+	(No symbol) [0x00007FF753553E47]
+	(No symbol) [0x00007FF75355461C]
+	(No symbol) [0x00007FF75356CF1A]
+	(No symbol) [0x00007FF75360FE4E]
+	(No symbol) [0x00007FF7535E735A]
+	(No symbol) [0x00007FF75360F0CF]
+	(No symbol) [0x00007FF7535E7133]
+	(No symbol) [0x00007FF7535B04D1]
+	(No symbol) [0x00007FF7535B1263]
+	GetHandleVerifier [0x00007FF753A6A8ED+2962317]
+	GetHandleVerifier [0x00007FF753A64EC2+2939234]
+	GetHandleVerifier [0x00007FF753A82FF3+3062419]
+	GetHandleVerifier [0x00007FF7537C4B9A+185914]
+	GetHandleVerifier [0x00007FF7537CC78F+217647]
+	GetHandleVerifier [0x00007FF7537B2A44+111844]
+	GetHandleVerifier [0x00007FF7537B2BF2+112274]
+	GetHandleVerifier [0x00007FF753798A79+5401]
+	BaseThreadInitThunk [0x00007FFB953C259D+29]
+	RtlUserThreadStart [0x00007FFB970EAF38+40]
+

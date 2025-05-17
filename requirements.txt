@@ -9,3 +9,6 @@ imageio==2.31.6
 webdriver-manager==4.0.1
 playwright==1.43.0
 colorama==0.4.6
+tensorboard==2.15.1
+matplotlib==3.8.2
+pillow==10.1.0

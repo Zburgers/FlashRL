@@ -1,0 +1,100 @@
+2025-05-02 23:09:07,652 - DEBUG - Setting up Chrome browser...
+2025-05-02 23:09:07,689 - DEBUG - Started executable: `chromedriver-win64\chromedriver.exe` in a child process with pid: 1964
+2025-05-02 23:09:08,221 - DEBUG - POST http://localhost:57860/session {"capabilities": {"firstMatch": [{}], "alwaysMatch": {"browserName": "chrome", "pageLoadStrategy": "normal", "goog:chromeOptions": {"extensions": [], "args": ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--disable-extensions", "--window-size=800,600", "--mute-audio", "--disable-network-connections", "--offline"]}}}}
+2025-05-02 23:09:08,222 - DEBUG - Starting new HTTP connection (1): localhost:57860
+2025-05-02 23:09:08,917 - DEBUG - http://localhost:57860 "POST /session HTTP/1.1" 200 0
+2025-05-02 23:09:08,918 - DEBUG - Remote response: status=200 | data={"value":{"capabilities":{"acceptInsecureCerts":false,"browserName":"chrome","browserVersion":"136.0.7103.49","chrome":{"chromedriverVersion":"136.0.7103.49 (031848bc6ad02b97854f3d6154d3aefd0434756a-refs/branch-heads/7103@{#1423})","userDataDir":"C:\\Users\\naksh\\AppData\\Local\\Temp\\scoped_dir1964_983688276"},"fedcm:accounts":true,"goog:chromeOptions":{"debuggerAddress":"localhost:57863"},"networkConnectionEnabled":false,"pageLoadStrategy":"normal","platformName":"windows","proxy":{},"setWindowRect":true,"strictFileInteractability":false,"timeouts":{"implicit":0,"pageLoad":300000,"script":30000},"unhandledPromptBehavior":"dismiss and notify","webauthn:extension:credBlob":true,"webauthn:extension:largeBlob":true,"webauthn:extension:minPinLength":true,"webauthn:extension:prf":true,"webauthn:virtualAuthenticators":true},"sessionId":"a6a2e1070c5b19a98abb941d08adc8f9"}} | headers=HTTPHeaderDict({'Content-Length': '880', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:09:08,920 - DEBUG - Finished Request
+2025-05-02 23:09:08,920 - DEBUG - POST http://localhost:57860/session/a6a2e1070c5b19a98abb941d08adc8f9/execute/sync {"script": "window.navigator.onLine = false;", "args": []}
+2025-05-02 23:09:08,937 - DEBUG - http://localhost:57860 "POST /session/a6a2e1070c5b19a98abb941d08adc8f9/execute/sync HTTP/1.1" 200 0
+2025-05-02 23:09:08,938 - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:09:08,939 - DEBUG - Finished Request
+2025-05-02 23:09:08,940 - DEBUG - Chrome browser initialized successfully
+2025-05-02 23:09:08,941 - INFO - Resetting environment
+2025-05-02 23:09:08,941 - DEBUG - POST http://localhost:57860/session/a6a2e1070c5b19a98abb941d08adc8f9/execute/sync {"script": "Runner.instance_.restart()", "args": []}
+2025-05-02 23:09:08,959 - DEBUG - http://localhost:57860 "POST /session/a6a2e1070c5b19a98abb941d08adc8f9/execute/sync HTTP/1.1" 500 0
+2025-05-02 23:09:08,960 - DEBUG - Remote response: status=500 | data={"value":{"error":"javascript error","message":"javascript error: Runner is not defined\n  (Session info: chrome=136.0.7103.49)","stacktrace":"\tGetHandleVerifier [0x00007FF7537AA145+76773]\n\tGetHandleVerifier [0x00007FF7537AA1A0+76864]\n\t(No symbol) [0x00007FF753568F7A]\n\t(No symbol) [0x00007FF753570978]\n\t(No symbol) [0x00007FF753573D31]\n\t(No symbol) [0x00007FF753610308]\n\t(No symbol) [0x00007FF7535E735A]\n\t(No symbol) [0x00007FF75360F0CF]\n\t(No symbol) [0x00007FF7535E7133]\n\t(No symbol) [0x00007FF7535B04D1]\n\t(No symbol) [0x00007FF7535B1263]\n\tGetHandleVerifier [0x00007FF753A6A8ED+2962317]\n\tGetHandleVerifier [0x00007FF753A64EC2+2939234]\n\tGetHandleVerifier [0x00007FF753A82FF3+3062419]\n\tGetHandleVerifier [0x00007FF7537C4B9A+185914]\n\tGetHandleVerifier [0x00007FF7537CC78F+217647]\n\tGetHandleVerifier [0x00007FF7537B2A44+111844]\n\tGetHandleVerifier [0x00007FF7537B2BF2+112274]\n\tGetHandleVerifier [0x00007FF753798A79+5401]\n\tBaseThreadInitThunk [0x00007FFB953C259D+29]\n\tRtlUserThreadStart [0x00007FFB970EAF38+40]\n"}} | headers=HTTPHeaderDict({'Content-Length': '1052', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:09:08,962 - DEBUG - Finished Request
+2025-05-02 23:09:08,963 - ERROR - Attempt 1: Error during reset: Message: javascript error: Runner is not defined
+  (Session info: chrome=136.0.7103.49)
+Stacktrace:
+	GetHandleVerifier [0x00007FF7537AA145+76773]
+	GetHandleVerifier [0x00007FF7537AA1A0+76864]
+	(No symbol) [0x00007FF753568F7A]
+	(No symbol) [0x00007FF753570978]
+	(No symbol) [0x00007FF753573D31]
+	(No symbol) [0x00007FF753610308]
+	(No symbol) [0x00007FF7535E735A]
+	(No symbol) [0x00007FF75360F0CF]
+	(No symbol) [0x00007FF7535E7133]
+	(No symbol) [0x00007FF7535B04D1]
+	(No symbol) [0x00007FF7535B1263]
+	GetHandleVerifier [0x00007FF753A6A8ED+2962317]
+	GetHandleVerifier [0x00007FF753A64EC2+2939234]
+	GetHandleVerifier [0x00007FF753A82FF3+3062419]
+	GetHandleVerifier [0x00007FF7537C4B9A+185914]
+	GetHandleVerifier [0x00007FF7537CC78F+217647]
+	GetHandleVerifier [0x00007FF7537B2A44+111844]
+	GetHandleVerifier [0x00007FF7537B2BF2+112274]
+	GetHandleVerifier [0x00007FF753798A79+5401]
+	BaseThreadInitThunk [0x00007FFB953C259D+29]
+	RtlUserThreadStart [0x00007FFB970EAF38+40]
+
+2025-05-02 23:09:10,972 - DEBUG - POST http://localhost:57860/session/a6a2e1070c5b19a98abb941d08adc8f9/execute/sync {"script": "Runner.instance_.restart()", "args": []}
+2025-05-02 23:09:10,978 - DEBUG - http://localhost:57860 "POST /session/a6a2e1070c5b19a98abb941d08adc8f9/execute/sync HTTP/1.1" 500 0
+2025-05-02 23:09:10,979 - DEBUG - Remote response: status=500 | data={"value":{"error":"javascript error","message":"javascript error: Runner is not defined\n  (Session info: chrome=136.0.7103.49)","stacktrace":"\tGetHandleVerifier [0x00007FF7537AA145+76773]\n\tGetHandleVerifier [0x00007FF7537AA1A0+76864]\n\t(No symbol) [0x00007FF753568F7A]\n\t(No symbol) [0x00007FF753570978]\n\t(No symbol) [0x00007FF753573D31]\n\t(No symbol) [0x00007FF753610308]\n\t(No symbol) [0x00007FF7535E735A]\n\t(No symbol) [0x00007FF75360F0CF]\n\t(No symbol) [0x00007FF7535E7133]\n\t(No symbol) [0x00007FF7535B04D1]\n\t(No symbol) [0x00007FF7535B1263]\n\tGetHandleVerifier [0x00007FF753A6A8ED+2962317]\n\tGetHandleVerifier [0x00007FF753A64EC2+2939234]\n\tGetHandleVerifier [0x00007FF753A82FF3+3062419]\n\tGetHandleVerifier [0x00007FF7537C4B9A+185914]\n\tGetHandleVerifier [0x00007FF7537CC78F+217647]\n\tGetHandleVerifier [0x00007FF7537B2A44+111844]\n\tGetHandleVerifier [0x00007FF7537B2BF2+112274]\n\tGetHandleVerifier [0x00007FF753798A79+5401]\n\tBaseThreadInitThunk [0x00007FFB953C259D+29]\n\tRtlUserThreadStart [0x00007FFB970EAF38+40]\n"}} | headers=HTTPHeaderDict({'Content-Length': '1052', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:09:10,980 - DEBUG - Finished Request
+2025-05-02 23:09:10,981 - ERROR - Attempt 2: Error during reset: Message: javascript error: Runner is not defined
+  (Session info: chrome=136.0.7103.49)
+Stacktrace:
+	GetHandleVerifier [0x00007FF7537AA145+76773]
+	GetHandleVerifier [0x00007FF7537AA1A0+76864]
+	(No symbol) [0x00007FF753568F7A]
+	(No symbol) [0x00007FF753570978]
+	(No symbol) [0x00007FF753573D31]
+	(No symbol) [0x00007FF753610308]
+	(No symbol) [0x00007FF7535E735A]
+	(No symbol) [0x00007FF75360F0CF]
+	(No symbol) [0x00007FF7535E7133]
+	(No symbol) [0x00007FF7535B04D1]
+	(No symbol) [0x00007FF7535B1263]
+	GetHandleVerifier [0x00007FF753A6A8ED+2962317]
+	GetHandleVerifier [0x00007FF753A64EC2+2939234]
+	GetHandleVerifier [0x00007FF753A82FF3+3062419]
+	GetHandleVerifier [0x00007FF7537C4B9A+185914]
+	GetHandleVerifier [0x00007FF7537CC78F+217647]
+	GetHandleVerifier [0x00007FF7537B2A44+111844]
+	GetHandleVerifier [0x00007FF7537B2BF2+112274]
+	GetHandleVerifier [0x00007FF753798A79+5401]
+	BaseThreadInitThunk [0x00007FFB953C259D+29]
+	RtlUserThreadStart [0x00007FFB970EAF38+40]
+
+2025-05-02 23:09:12,993 - DEBUG - POST http://localhost:57860/session/a6a2e1070c5b19a98abb941d08adc8f9/execute/sync {"script": "Runner.instance_.restart()", "args": []}
+2025-05-02 23:09:13,003 - DEBUG - http://localhost:57860 "POST /session/a6a2e1070c5b19a98abb941d08adc8f9/execute/sync HTTP/1.1" 500 0
+2025-05-02 23:09:13,004 - DEBUG - Remote response: status=500 | data={"value":{"error":"javascript error","message":"javascript error: Runner is not defined\n  (Session info: chrome=136.0.7103.49)","stacktrace":"\tGetHandleVerifier [0x00007FF7537AA145+76773]\n\tGetHandleVerifier [0x00007FF7537AA1A0+76864]\n\t(No symbol) [0x00007FF753568F7A]\n\t(No symbol) [0x00007FF753570978]\n\t(No symbol) [0x00007FF753573D31]\n\t(No symbol) [0x00007FF753610308]\n\t(No symbol) [0x00007FF7535E735A]\n\t(No symbol) [0x00007FF75360F0CF]\n\t(No symbol) [0x00007FF7535E7133]\n\t(No symbol) [0x00007FF7535B04D1]\n\t(No symbol) [0x00007FF7535B1263]\n\tGetHandleVerifier [0x00007FF753A6A8ED+2962317]\n\tGetHandleVerifier [0x00007FF753A64EC2+2939234]\n\tGetHandleVerifier [0x00007FF753A82FF3+3062419]\n\tGetHandleVerifier [0x00007FF7537C4B9A+185914]\n\tGetHandleVerifier [0x00007FF7537CC78F+217647]\n\tGetHandleVerifier [0x00007FF7537B2A44+111844]\n\tGetHandleVerifier [0x00007FF7537B2BF2+112274]\n\tGetHandleVerifier [0x00007FF753798A79+5401]\n\tBaseThreadInitThunk [0x00007FFB953C259D+29]\n\tRtlUserThreadStart [0x00007FFB970EAF38+40]\n"}} | headers=HTTPHeaderDict({'Content-Length': '1052', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:09:13,007 - DEBUG - Finished Request
+2025-05-02 23:09:13,008 - ERROR - Attempt 3: Error during reset: Message: javascript error: Runner is not defined
+  (Session info: chrome=136.0.7103.49)
+Stacktrace:
+	GetHandleVerifier [0x00007FF7537AA145+76773]
+	GetHandleVerifier [0x00007FF7537AA1A0+76864]
+	(No symbol) [0x00007FF753568F7A]
+	(No symbol) [0x00007FF753570978]
+	(No symbol) [0x00007FF753573D31]
+	(No symbol) [0x00007FF753610308]
+	(No symbol) [0x00007FF7535E735A]
+	(No symbol) [0x00007FF75360F0CF]
+	(No symbol) [0x00007FF7535E7133]
+	(No symbol) [0x00007FF7535B04D1]
+	(No symbol) [0x00007FF7535B1263]
+	GetHandleVerifier [0x00007FF753A6A8ED+2962317]
+	GetHandleVerifier [0x00007FF753A64EC2+2939234]
+	GetHandleVerifier [0x00007FF753A82FF3+3062419]
+	GetHandleVerifier [0x00007FF7537C4B9A+185914]
+	GetHandleVerifier [0x00007FF7537CC78F+217647]
+	GetHandleVerifier [0x00007FF7537B2A44+111844]
+	GetHandleVerifier [0x00007FF7537B2BF2+112274]
+	GetHandleVerifier [0x00007FF753798A79+5401]
+	BaseThreadInitThunk [0x00007FFB953C259D+29]
+	RtlUserThreadStart [0x00007FFB970EAF38+40]
+

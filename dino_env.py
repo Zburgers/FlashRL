@@ -154,7 +154,7 @@ class DinoEnv(gym.Env):
             if not is_runner_ready:
                 logger.warning(f"{Fore.YELLOW}Game not properly initialized, but continuing anyway")
                 return False
-            
+                
             logger.info(f"{Fore.GREEN}Game verified and ready")
             return True
         except Exception as e:
@@ -226,10 +226,10 @@ class DinoEnv(gym.Env):
         obs = np.array([state["y"], state["x"], state["width"]], dtype=np.float32)
         
         # Calculate reward
-        reward = 1.0  # Small reward for surviving
+        reward = 0.1  # Small reward for surviving
         done = state["crashed"]
         if done:
-            reward = -100.0  # Penalty for crashing
+            reward = -10.0  # Penalty for crashing
             
         # Additional info dictionary with score
         info = {"score": state.get("score", 0)}

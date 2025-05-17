@@ -1,0 +1,147 @@
+2025-05-02 23:17:10,920 - DEBUG - Setting up Chrome browser...
+2025-05-02 23:17:10,951 - DEBUG - Started executable: `chromedriver-win64\chromedriver.exe` in a child process with pid: 3312
+2025-05-02 23:17:11,467 - DEBUG - POST http://localhost:60293/session {"capabilities": {"firstMatch": [{}], "alwaysMatch": {"browserName": "chrome", "pageLoadStrategy": "normal", "goog:chromeOptions": {"extensions": [], "args": ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--disable-extensions", "--window-size=800,600", "--mute-audio"]}}}}
+2025-05-02 23:17:11,468 - DEBUG - Starting new HTTP connection (1): localhost:60293
+2025-05-02 23:17:12,316 - DEBUG - http://localhost:60293 "POST /session HTTP/1.1" 200 0
+2025-05-02 23:17:12,317 - DEBUG - Remote response: status=200 | data={"value":{"capabilities":{"acceptInsecureCerts":false,"browserName":"chrome","browserVersion":"136.0.7103.49","chrome":{"chromedriverVersion":"136.0.7103.49 (031848bc6ad02b97854f3d6154d3aefd0434756a-refs/branch-heads/7103@{#1423})","userDataDir":"C:\\Users\\naksh\\AppData\\Local\\Temp\\scoped_dir3312_1390774308"},"fedcm:accounts":true,"goog:chromeOptions":{"debuggerAddress":"localhost:60296"},"networkConnectionEnabled":false,"pageLoadStrategy":"normal","platformName":"windows","proxy":{},"setWindowRect":true,"strictFileInteractability":false,"timeouts":{"implicit":0,"pageLoad":300000,"script":30000},"unhandledPromptBehavior":"dismiss and notify","webauthn:extension:credBlob":true,"webauthn:extension:largeBlob":true,"webauthn:extension:minPinLength":true,"webauthn:extension:prf":true,"webauthn:virtualAuthenticators":true},"sessionId":"00af8a4bed8a94c43639be96f2cb4218"}} | headers=HTTPHeaderDict({'Content-Length': '881', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:12,321 - DEBUG - Finished Request
+2025-05-02 23:17:12,322 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/url {"url": "https://chromedino.com/"}
+2025-05-02 23:17:19,508 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/url HTTP/1.1" 200 0
+2025-05-02 23:17:19,509 - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:19,509 - DEBUG - Finished Request
+2025-05-02 23:17:21,511 - DEBUG - Chrome browser initialized successfully
+2025-05-02 23:17:21,512 - INFO - Resetting environment
+2025-05-02 23:17:21,513 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/element {"using": "tag name", "value": "body"}
+2025-05-02 23:17:21,542 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/element HTTP/1.1" 200 0
+2025-05-02 23:17:21,543 - DEBUG - Remote response: status=200 | data={"value":{"element-6066-11e4-a52e-4f735466cecf":"f.B19C1BE95C4A6F60685DCB83D1D9B254.d.08DB9B9A8BFF11853D22292D4611C5BF.e.21"}} | headers=HTTPHeaderDict({'Content-Length': '126', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:21,545 - DEBUG - Finished Request
+2025-05-02 23:17:21,545 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/element/f.B19C1BE95C4A6F60685DCB83D1D9B254.d.08DB9B9A8BFF11853D22292D4611C5BF.e.21/click {}
+2025-05-02 23:17:21,662 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/element/f.B19C1BE95C4A6F60685DCB83D1D9B254.d.08DB9B9A8BFF11853D22292D4611C5BF.e.21/click HTTP/1.1" 200 0
+2025-05-02 23:17:21,663 - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:21,664 - DEBUG - Finished Request
+2025-05-02 23:17:22,165 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/element/f.B19C1BE95C4A6F60685DCB83D1D9B254.d.08DB9B9A8BFF11853D22292D4611C5BF.e.21/value {"text": "\ue00d", "value": ["\ue00d"]}
+2025-05-02 23:17:22,513 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/element/f.B19C1BE95C4A6F60685DCB83D1D9B254.d.08DB9B9A8BFF11853D22292D4611C5BF.e.21/value HTTP/1.1" 200 0
+2025-05-02 23:17:22,514 - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:22,515 - DEBUG - Finished Request
+2025-05-02 23:17:22,716 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/element {"using": "css selector", "value": "[id=\"game-canvas\"]"}
+2025-05-02 23:17:22,736 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/element HTTP/1.1" 404 0
+2025-05-02 23:17:22,737 - DEBUG - Remote response: status=404 | data={"value":{"error":"no such element","message":"no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"[id=\"game-canvas\"]\"}\n  (Session info: chrome=136.0.7103.49)","stacktrace":"\tGetHandleVerifier [0x00007FF795BEA145+76773]\n\tGetHandleVerifier [0x00007FF795BEA1A0+76864]\n\t(No symbol) [0x00007FF7959A8F7A]\n\t(No symbol) [0x00007FF7959FF496]\n\t(No symbol) [0x00007FF7959FF74C]\n\t(No symbol) [0x00007FF795A52287]\n\t(No symbol) [0x00007FF795A2739F]\n\t(No symbol) [0x00007FF795A4F0CF]\n\t(No symbol) [0x00007FF795A27133]\n\t(No symbol) [0x00007FF7959F04D1]\n\t(No symbol) [0x00007FF7959F1263]\n\tGetHandleVerifier [0x00007FF795EAA8ED+2962317]\n\tGetHandleVerifier [0x00007FF795EA4EC2+2939234]\n\tGetHandleVerifier [0x00007FF795EC2FF3+3062419]\n\tGetHandleVerifier [0x00007FF795C04B9A+185914]\n\tGetHandleVerifier [0x00007FF795C0C78F+217647]\n\tGetHandleVerifier [0x00007FF795BF2A44+111844]\n\tGetHandleVerifier [0x00007FF795BF2BF2+112274]\n\tGetHandleVerifier [0x00007FF795BD8A79+5401]\n\tBaseThreadInitThunk [0x00007FFB953C259D+29]\n\tRtlUserThreadStart [0x00007FFB970EAF38+40]\n"}} | headers=HTTPHeaderDict({'Content-Length': '1122', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:22,739 - DEBUG - Finished Request
+2025-05-02 23:17:22,740 - ERROR - Failed to detect game area: Message: no such element: Unable to locate element: {"method":"css selector","selector":"[id="game-canvas"]"}
+  (Session info: chrome=136.0.7103.49); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Stacktrace:
+	GetHandleVerifier [0x00007FF795BEA145+76773]
+	GetHandleVerifier [0x00007FF795BEA1A0+76864]
+	(No symbol) [0x00007FF7959A8F7A]
+	(No symbol) [0x00007FF7959FF496]
+	(No symbol) [0x00007FF7959FF74C]
+	(No symbol) [0x00007FF795A52287]
+	(No symbol) [0x00007FF795A2739F]
+	(No symbol) [0x00007FF795A4F0CF]
+	(No symbol) [0x00007FF795A27133]
+	(No symbol) [0x00007FF7959F04D1]
+	(No symbol) [0x00007FF7959F1263]
+	GetHandleVerifier [0x00007FF795EAA8ED+2962317]
+	GetHandleVerifier [0x00007FF795EA4EC2+2939234]
+	GetHandleVerifier [0x00007FF795EC2FF3+3062419]
+	GetHandleVerifier [0x00007FF795C04B9A+185914]
+	GetHandleVerifier [0x00007FF795C0C78F+217647]
+	GetHandleVerifier [0x00007FF795BF2A44+111844]
+	GetHandleVerifier [0x00007FF795BF2BF2+112274]
+	GetHandleVerifier [0x00007FF795BD8A79+5401]
+	BaseThreadInitThunk [0x00007FFB953C259D+29]
+	RtlUserThreadStart [0x00007FFB970EAF38+40]
+
+2025-05-02 23:17:22,745 - ERROR - Attempt 1: Error during reset: Failed to detect game area
+2025-05-02 23:17:24,745 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/url {"url": "https://chromedino.com/"}
+2025-05-02 23:17:27,016 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/url HTTP/1.1" 200 0
+2025-05-02 23:17:27,018 - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:27,019 - DEBUG - Finished Request
+2025-05-02 23:17:29,028 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/element {"using": "tag name", "value": "body"}
+2025-05-02 23:17:29,048 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/element HTTP/1.1" 200 0
+2025-05-02 23:17:29,049 - DEBUG - Remote response: status=200 | data={"value":{"element-6066-11e4-a52e-4f735466cecf":"f.B19C1BE95C4A6F60685DCB83D1D9B254.d.6CB32F03EBE1F2AC7738F410F16BCBAC.e.37"}} | headers=HTTPHeaderDict({'Content-Length': '126', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:29,051 - DEBUG - Finished Request
+2025-05-02 23:17:29,052 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/element/f.B19C1BE95C4A6F60685DCB83D1D9B254.d.6CB32F03EBE1F2AC7738F410F16BCBAC.e.37/click {}
+2025-05-02 23:17:29,147 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/element/f.B19C1BE95C4A6F60685DCB83D1D9B254.d.6CB32F03EBE1F2AC7738F410F16BCBAC.e.37/click HTTP/1.1" 200 0
+2025-05-02 23:17:29,148 - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:29,149 - DEBUG - Finished Request
+2025-05-02 23:17:29,661 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/element/f.B19C1BE95C4A6F60685DCB83D1D9B254.d.6CB32F03EBE1F2AC7738F410F16BCBAC.e.37/value {"text": "\ue00d", "value": ["\ue00d"]}
+2025-05-02 23:17:29,746 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/element/f.B19C1BE95C4A6F60685DCB83D1D9B254.d.6CB32F03EBE1F2AC7738F410F16BCBAC.e.37/value HTTP/1.1" 200 0
+2025-05-02 23:17:29,747 - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:29,747 - DEBUG - Finished Request
+2025-05-02 23:17:29,948 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/element {"using": "css selector", "value": "[id=\"game-canvas\"]"}
+2025-05-02 23:17:29,964 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/element HTTP/1.1" 404 0
+2025-05-02 23:17:29,965 - DEBUG - Remote response: status=404 | data={"value":{"error":"no such element","message":"no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"[id=\"game-canvas\"]\"}\n  (Session info: chrome=136.0.7103.49)","stacktrace":"\tGetHandleVerifier [0x00007FF795BEA145+76773]\n\tGetHandleVerifier [0x00007FF795BEA1A0+76864]\n\t(No symbol) [0x00007FF7959A8F7A]\n\t(No symbol) [0x00007FF7959FF496]\n\t(No symbol) [0x00007FF7959FF74C]\n\t(No symbol) [0x00007FF795A52287]\n\t(No symbol) [0x00007FF795A2739F]\n\t(No symbol) [0x00007FF795A4F0CF]\n\t(No symbol) [0x00007FF795A27133]\n\t(No symbol) [0x00007FF7959F04D1]\n\t(No symbol) [0x00007FF7959F1263]\n\tGetHandleVerifier [0x00007FF795EAA8ED+2962317]\n\tGetHandleVerifier [0x00007FF795EA4EC2+2939234]\n\tGetHandleVerifier [0x00007FF795EC2FF3+3062419]\n\tGetHandleVerifier [0x00007FF795C04B9A+185914]\n\tGetHandleVerifier [0x00007FF795C0C78F+217647]\n\tGetHandleVerifier [0x00007FF795BF2A44+111844]\n\tGetHandleVerifier [0x00007FF795BF2BF2+112274]\n\tGetHandleVerifier [0x00007FF795BD8A79+5401]\n\tBaseThreadInitThunk [0x00007FFB953C259D+29]\n\tRtlUserThreadStart [0x00007FFB970EAF38+40]\n"}} | headers=HTTPHeaderDict({'Content-Length': '1122', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:29,969 - DEBUG - Finished Request
+2025-05-02 23:17:29,970 - ERROR - Failed to detect game area: Message: no such element: Unable to locate element: {"method":"css selector","selector":"[id="game-canvas"]"}
+  (Session info: chrome=136.0.7103.49); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Stacktrace:
+	GetHandleVerifier [0x00007FF795BEA145+76773]
+	GetHandleVerifier [0x00007FF795BEA1A0+76864]
+	(No symbol) [0x00007FF7959A8F7A]
+	(No symbol) [0x00007FF7959FF496]
+	(No symbol) [0x00007FF7959FF74C]
+	(No symbol) [0x00007FF795A52287]
+	(No symbol) [0x00007FF795A2739F]
+	(No symbol) [0x00007FF795A4F0CF]
+	(No symbol) [0x00007FF795A27133]
+	(No symbol) [0x00007FF7959F04D1]
+	(No symbol) [0x00007FF7959F1263]
+	GetHandleVerifier [0x00007FF795EAA8ED+2962317]
+	GetHandleVerifier [0x00007FF795EA4EC2+2939234]
+	GetHandleVerifier [0x00007FF795EC2FF3+3062419]
+	GetHandleVerifier [0x00007FF795C04B9A+185914]
+	GetHandleVerifier [0x00007FF795C0C78F+217647]
+	GetHandleVerifier [0x00007FF795BF2A44+111844]
+	GetHandleVerifier [0x00007FF795BF2BF2+112274]
+	GetHandleVerifier [0x00007FF795BD8A79+5401]
+	BaseThreadInitThunk [0x00007FFB953C259D+29]
+	RtlUserThreadStart [0x00007FFB970EAF38+40]
+
+2025-05-02 23:17:29,975 - ERROR - Attempt 2: Error during reset: Failed to detect game area
+2025-05-02 23:17:31,975 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/url {"url": "https://chromedino.com/"}
+2025-05-02 23:17:35,604 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/url HTTP/1.1" 200 0
+2025-05-02 23:17:35,605 - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:35,606 - DEBUG - Finished Request
+2025-05-02 23:17:37,611 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/element {"using": "tag name", "value": "body"}
+2025-05-02 23:17:37,630 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/element HTTP/1.1" 200 0
+2025-05-02 23:17:37,631 - DEBUG - Remote response: status=200 | data={"value":{"element-6066-11e4-a52e-4f735466cecf":"f.B19C1BE95C4A6F60685DCB83D1D9B254.d.6F3239C81B9E290F095173F33FB8FF9D.e.40"}} | headers=HTTPHeaderDict({'Content-Length': '126', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:37,633 - DEBUG - Finished Request
+2025-05-02 23:17:37,633 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/element/f.B19C1BE95C4A6F60685DCB83D1D9B254.d.6F3239C81B9E290F095173F33FB8FF9D.e.40/click {}
+2025-05-02 23:17:37,722 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/element/f.B19C1BE95C4A6F60685DCB83D1D9B254.d.6F3239C81B9E290F095173F33FB8FF9D.e.40/click HTTP/1.1" 200 0
+2025-05-02 23:17:37,723 - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:37,724 - DEBUG - Finished Request
+2025-05-02 23:17:38,230 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/element/f.B19C1BE95C4A6F60685DCB83D1D9B254.d.6F3239C81B9E290F095173F33FB8FF9D.e.40/value {"text": "\ue00d", "value": ["\ue00d"]}
+2025-05-02 23:17:38,307 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/element/f.B19C1BE95C4A6F60685DCB83D1D9B254.d.6F3239C81B9E290F095173F33FB8FF9D.e.40/value HTTP/1.1" 200 0
+2025-05-02 23:17:38,308 - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:38,309 - DEBUG - Finished Request
+2025-05-02 23:17:38,513 - DEBUG - POST http://localhost:60293/session/00af8a4bed8a94c43639be96f2cb4218/element {"using": "css selector", "value": "[id=\"game-canvas\"]"}
+2025-05-02 23:17:38,528 - DEBUG - http://localhost:60293 "POST /session/00af8a4bed8a94c43639be96f2cb4218/element HTTP/1.1" 404 0
+2025-05-02 23:17:38,529 - DEBUG - Remote response: status=404 | data={"value":{"error":"no such element","message":"no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"[id=\"game-canvas\"]\"}\n  (Session info: chrome=136.0.7103.49)","stacktrace":"\tGetHandleVerifier [0x00007FF795BEA145+76773]\n\tGetHandleVerifier [0x00007FF795BEA1A0+76864]\n\t(No symbol) [0x00007FF7959A8F7A]\n\t(No symbol) [0x00007FF7959FF496]\n\t(No symbol) [0x00007FF7959FF74C]\n\t(No symbol) [0x00007FF795A52287]\n\t(No symbol) [0x00007FF795A2739F]\n\t(No symbol) [0x00007FF795A4F0CF]\n\t(No symbol) [0x00007FF795A27133]\n\t(No symbol) [0x00007FF7959F04D1]\n\t(No symbol) [0x00007FF7959F1263]\n\tGetHandleVerifier [0x00007FF795EAA8ED+2962317]\n\tGetHandleVerifier [0x00007FF795EA4EC2+2939234]\n\tGetHandleVerifier [0x00007FF795EC2FF3+3062419]\n\tGetHandleVerifier [0x00007FF795C04B9A+185914]\n\tGetHandleVerifier [0x00007FF795C0C78F+217647]\n\tGetHandleVerifier [0x00007FF795BF2A44+111844]\n\tGetHandleVerifier [0x00007FF795BF2BF2+112274]\n\tGetHandleVerifier [0x00007FF795BD8A79+5401]\n\tBaseThreadInitThunk [0x00007FFB953C259D+29]\n\tRtlUserThreadStart [0x00007FFB970EAF38+40]\n"}} | headers=HTTPHeaderDict({'Content-Length': '1122', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-05-02 23:17:38,533 - DEBUG - Finished Request
+2025-05-02 23:17:38,534 - ERROR - Failed to detect game area: Message: no such element: Unable to locate element: {"method":"css selector","selector":"[id="game-canvas"]"}
+  (Session info: chrome=136.0.7103.49); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Stacktrace:
+	GetHandleVerifier [0x00007FF795BEA145+76773]
+	GetHandleVerifier [0x00007FF795BEA1A0+76864]
+	(No symbol) [0x00007FF7959A8F7A]
+	(No symbol) [0x00007FF7959FF496]
+	(No symbol) [0x00007FF7959FF74C]
+	(No symbol) [0x00007FF795A52287]
+	(No symbol) [0x00007FF795A2739F]
+	(No symbol) [0x00007FF795A4F0CF]
+	(No symbol) [0x00007FF795A27133]
+	(No symbol) [0x00007FF7959F04D1]
+	(No symbol) [0x00007FF7959F1263]
+	GetHandleVerifier [0x00007FF795EAA8ED+2962317]
+	GetHandleVerifier [0x00007FF795EA4EC2+2939234]
+	GetHandleVerifier [0x00007FF795EC2FF3+3062419]
+	GetHandleVerifier [0x00007FF795C04B9A+185914]
+	GetHandleVerifier [0x00007FF795C0C78F+217647]
+	GetHandleVerifier [0x00007FF795BF2A44+111844]
+	GetHandleVerifier [0x00007FF795BF2BF2+112274]
+	GetHandleVerifier [0x00007FF795BD8A79+5401]
+	BaseThreadInitThunk [0x00007FFB953C259D+29]
+	RtlUserThreadStart [0x00007FFB970EAF38+40]
+
+2025-05-02 23:17:38,539 - ERROR - Attempt 3: Error during reset: Failed to detect game area
