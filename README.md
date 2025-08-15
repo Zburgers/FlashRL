@@ -1,4 +1,4 @@
-# 🎮 FlashRL - Chrome Dino AI
+# 🎮 FlashRL - Chrome Dino RL 
 
 <div align="center">
   
@@ -27,6 +27,10 @@
   <h3>🦖 A Deep Q-Learning agent that learns to master the Chrome Dino game using reinforcement learning 🦖</h3>
   <p><em>Created by <a href="https://github.com/Zburgers/">Zburgers</a></em></p>
 </div>
+
+```
+             F L A S H R L  ·  Chrome Dino RL Agent
+```
 
 ## 🧠 What is FlashRL?
 
