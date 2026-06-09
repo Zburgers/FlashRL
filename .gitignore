@@ -1,0 +1,13 @@
+.env
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+logs/
+runs/
+session_logs/
+data/debug_frames/
+data/eval_frames/
+data/*.log
+data/models/*.pth

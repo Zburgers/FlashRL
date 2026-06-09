@@ -1,4 +1,4 @@
-"""Compatibility wrapper for the package environment."""
+"""Environment entrypoints."""
 
 from flashrl.envs.dino_env import DinoEnv
 
