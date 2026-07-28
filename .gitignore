@@ -14,3 +14,9 @@ data/debug_frames/
 data/eval_frames/
 data/*.log
 data/models/*.pth
+*.pt
+*.pth
+results/*.csv
+results/*.jsonl
+reports/demo/*.gif
+reports/demo/*.mp4

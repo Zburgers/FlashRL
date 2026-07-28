@@ -1,5 +1,0 @@
-"""Compatibility wrapper for the package environment."""
-
-from flashrl.envs.dino_env import DinoEnv
-
-__all__ = ["DinoEnv"]
