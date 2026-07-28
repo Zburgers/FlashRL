@@ -38,6 +38,8 @@ def test_ci_gates_pushes_pull_requests_wheels_and_supported_python():
     assert "ruff" in workflow
     assert "actions/checkout@v7" in workflow
     assert "actions/setup-python@v7" in workflow
+    assert "if: matrix.python-version == '3.13'" in workflow
+    assert 'pip install -e ".[dev]"' not in workflow
 
 
 def test_wheel_verifier_exists_and_uses_isolated_environment():
