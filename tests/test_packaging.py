@@ -2,6 +2,12 @@ from pathlib import Path
 
 import tomllib
 
+from flashrl import __version__
+
+
+def test_release_version_is_final():
+    assert __version__ == "2.0.0"
+
 
 def test_package_metadata_defines_release_surface():
     metadata = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
