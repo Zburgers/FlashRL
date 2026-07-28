@@ -1,0 +1,71 @@
+{
+  "name": "v2-tuning",
+  "output_dir": "runs/v2-tuning",
+  "seeds": [11, 29, 47],
+  "evaluation": {
+    "episodes": 50,
+    "seed_base": 100000
+  },
+  "base": {
+    "episodes": 10000,
+    "total_train_frames": 30000,
+    "max_episode_steps": 750,
+    "obs_mode": "state",
+    "action_mode": "full",
+    "backend": "sim",
+    "gamma": 0.99,
+    "learning_rate": 0.0003,
+    "batch_size": 64,
+    "replay_size": 50000,
+    "warmup_steps": 500,
+    "target_update_steps": 500,
+    "train_every": 4,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.05,
+    "epsilon_decay_steps": 15000,
+    "double_dqn": true,
+    "dueling": true,
+    "prioritized_replay": true,
+    "n_step": 3,
+    "selection_interval_episodes": 50,
+    "selection_episodes": 15,
+    "selection_seed": 50000,
+    "device": "auto"
+  },
+  "variants": [
+    {
+      "name": "per-n3-reference",
+      "overrides": {}
+    },
+    {
+      "name": "n3-no-per",
+      "overrides": {
+        "prioritized_replay": false
+      }
+    },
+    {
+      "name": "per-n3-lr1e4",
+      "overrides": {
+        "learning_rate": 0.0001
+      }
+    },
+    {
+      "name": "per-n3-lr5e4",
+      "overrides": {
+        "learning_rate": 0.0005
+      }
+    },
+    {
+      "name": "per-n3-slow-explore",
+      "overrides": {
+        "epsilon_decay_steps": 30000
+      }
+    },
+    {
+      "name": "per-n5",
+      "overrides": {
+        "n_step": 5
+      }
+    }
+  ]
+}
