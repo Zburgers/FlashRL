@@ -40,6 +40,7 @@ class CheckpointCompatibilityError(ValueError):
 @dataclass
 class DQNConfig:
     episodes: int = 50
+    total_train_frames: int | None = None
     max_episode_steps: int = 1000
     seed: int = 0
     obs_mode: str = "state"
@@ -305,6 +306,8 @@ def optimize(
 
 
 def train_dqn(cfg: DQNConfig, resume_path: str | Path | None = None) -> dict[str, Any]:
+    if cfg.total_train_frames is not None and cfg.total_train_frames <= 0:
+        raise ValueError("total_train_frames must be positive")
     set_seed(cfg.seed)
     run_id = cfg.run_id or datetime.now(timezone.utc).strftime("dqn_%Y%m%dT%H%M%SZ")
     run_dir = Path(cfg.output_dir) / run_id
@@ -319,7 +322,15 @@ def train_dqn(cfg: DQNConfig, resume_path: str | Path | None = None) -> dict[str
     identity_config = {
         key: value
         for key, value in config_payload.items()
-        if key not in {"episodes", "output_dir", "run_id", "device", "seed"}
+        if key
+        not in {
+            "episodes",
+            "total_train_frames",
+            "output_dir",
+            "run_id",
+            "device",
+            "seed",
+        }
     }
     variant_id = algorithm_id(
         cfg.double_dqn,
@@ -426,6 +437,7 @@ def train_dqn(cfg: DQNConfig, resume_path: str | Path | None = None) -> dict[str
             episode_reward = 0.0
             losses: list[float] = []
             done = False
+            budget_exhausted = False
             while not done:
                 epsilon = epsilon_by_step(total_steps, cfg)
                 action = select_action(policy_net, obs, env, epsilon, device)
@@ -452,6 +464,10 @@ def train_dqn(cfg: DQNConfig, resume_path: str | Path | None = None) -> dict[str
                 obs = next_obs
                 episode_reward += reward
                 total_steps += 1
+                budget_exhausted = (
+                    cfg.total_train_frames is not None and total_steps >= cfg.total_train_frames
+                )
+                done = done or budget_exhausted
             for flushed in n_step.flush():
                 replay.push(flushed)
             row = {
@@ -464,16 +480,20 @@ def train_dqn(cfg: DQNConfig, resume_path: str | Path | None = None) -> dict[str
                 "terminated": terminated,
                 "truncated": truncated,
                 "ending_reason": (
-                    info.get("death_type", "terminated") if terminated else "time_limit"
+                    "frame_budget"
+                    if budget_exhausted and not (terminated or truncated)
+                    else (info.get("death_type", "terminated") if terminated else "time_limit")
                 ),
                 "wall_clock_s": time.time() - started,
             }
             writer.writerow(row)
             fh.flush()
             best_training_score = max(best_training_score, float(row["score"]))
-            should_select = (episode + 1) % max(
-                1, cfg.selection_interval_episodes
-            ) == 0 or episode + 1 == cfg.episodes
+            should_select = (
+                (episode + 1) % max(1, cfg.selection_interval_episodes) == 0
+                or episode + 1 == cfg.episodes
+                or budget_exhausted
+            )
             if should_select:
                 candidate_score = _selection_score(policy_net, cfg, device)
                 candidate = _checkpoint_payload(
@@ -504,6 +524,8 @@ def train_dqn(cfg: DQNConfig, resume_path: str | Path | None = None) -> dict[str
                 selection_score=best_tracker.best_score,
             )
             atomic_torch_save(last_checkpoint_path, last_payload)
+            if budget_exhausted:
+                break
     env.close()
     manifest.status = "completed"
     manifest.train_frames = total_steps

@@ -91,3 +91,22 @@ def test_training_seed_is_not_part_of_hyperparameter_identity(tmp_path):
     assert manifests[0]["experiment_id"] == manifests[1]["experiment_id"]
     assert manifests[0]["hyperparameter_hash"] == manifests[1]["hyperparameter_hash"]
     assert manifests[0]["training_seed"] != manifests[1]["training_seed"]
+
+
+def test_training_stops_at_exact_environment_frame_budget(tmp_path):
+    result = train_dqn(
+        DQNConfig(
+            episodes=100,
+            total_train_frames=7,
+            max_episode_steps=100,
+            batch_size=1,
+            warmup_steps=1,
+            replay_size=10,
+            selection_episodes=1,
+            output_dir=str(tmp_path),
+            run_id="frame-budget",
+        )
+    )
+    assert result["train_frames"] == 7
+    metrics = (tmp_path / result["run_id"] / "train_metrics.csv").read_text()
+    assert "frame_budget" in metrics

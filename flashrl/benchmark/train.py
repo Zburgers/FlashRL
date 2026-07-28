@@ -12,6 +12,7 @@ from flashrl.agents.dqn.train import DQNConfig, train_dqn
 def configure_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--algorithm", choices=["dqn"], default="dqn")
     parser.add_argument("--episodes", type=int, default=50)
+    parser.add_argument("--total-train-frames", type=int, default=None)
     parser.add_argument("--max-episode-steps", type=int, default=1000)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--obs-mode", choices=["state", "vision", "hybrid"], default="state")
@@ -45,6 +46,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 def run(args: argparse.Namespace) -> dict:
     cfg = DQNConfig(
         episodes=args.episodes,
+        total_train_frames=args.total_train_frames,
         max_episode_steps=args.max_episode_steps,
         seed=args.seed,
         obs_mode=args.obs_mode,
