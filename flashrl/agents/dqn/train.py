@@ -558,8 +558,11 @@ class DQNPolicy:
         self.model.eval()
 
     def act(self, obs) -> int:
+        return int(np.argmax(self.q_values(obs)))
+
+    def q_values(self, obs) -> list[float]:
         if self.model is None:
             raise RuntimeError("DQNPolicy must be bound to an environment before use")
         with torch.no_grad():
             q_values = self.model(obs_to_torch(obs, self.device))
-        return int(q_values.argmax(dim=1).item())
+        return [float(value) for value in q_values.squeeze(0).cpu().tolist()]

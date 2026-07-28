@@ -18,8 +18,17 @@ def _run_doctor(args: argparse.Namespace) -> dict:
     return diagnostics
 
 
-def _demo_not_built(_: argparse.Namespace) -> None:
-    raise SystemExit("The live demo is installed in the next implementation task.")
+def _run_demo(args: argparse.Namespace) -> None:
+    from flashrl.demo.server import run_demo
+
+    run_demo(
+        policy_name=args.policy,
+        checkpoint=args.checkpoint or None,
+        seed=args.seed,
+        host=args.host,
+        port=args.port,
+        open_browser=not args.no_open,
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -64,9 +73,10 @@ def build_parser() -> argparse.ArgumentParser:
     demo_parser.add_argument("--checkpoint", default="")
     demo_parser.add_argument("--policy", choices=["rule", "random", "dqn"], default="rule")
     demo_parser.add_argument("--seed", type=int, default=0)
+    demo_parser.add_argument("--host", default="127.0.0.1")
     demo_parser.add_argument("--port", type=int, default=8765)
     demo_parser.add_argument("--no-open", action="store_true")
-    demo_parser.set_defaults(handler=_demo_not_built)
+    demo_parser.set_defaults(handler=_run_demo)
     return parser
 
 

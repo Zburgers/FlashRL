@@ -52,6 +52,9 @@ version = {attr = "flashrl.__version__"}
 [tool.setuptools.packages.find]
 include = ["flashrl*"]
 
+[tool.setuptools.package-data]
+"flashrl.demo.static" = ["*.html", "*.js", "*.css"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-p no:asyncio"

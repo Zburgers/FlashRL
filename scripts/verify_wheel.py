@@ -68,6 +68,20 @@ def verify(
             cwd=root,
             check=True,
         )
+        subprocess.run(
+            [
+                str(python),
+                "-c",
+                (
+                    "from importlib.resources import files; "
+                    "assets=files('flashrl.demo.static'); "
+                    "assert all(assets.joinpath(name).is_file() "
+                    "for name in ('index.html','app.js','styles.css'))"
+                ),
+            ],
+            cwd=root,
+            check=True,
+        )
 
 
 def main() -> None:

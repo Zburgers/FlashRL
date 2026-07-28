@@ -35,4 +35,5 @@ def test_wheel_verifier_exists_and_uses_isolated_environment():
     assert "--force-reinstall" in verifier
     assert '"flashrl"' in verifier
     assert '"--help"' in verifier
+    assert "flashrl.demo.static" in verifier
     assert "scripts/smoke_test.py" not in verifier

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>FlashRL Live Policy Lab</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="FlashRL policy lab">
+        <span class="brand-mark">F</span>
+        <span>FlashRL</span>
+      </a>
+      <div class="run-identity">
+        <span class="live-state" id="live-state">Connecting</span>
+        <span id="policy-name">Policy pending</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro">
+        <p class="kicker">Live policy laboratory</p>
+        <h1>Watch the agent<br>make every decision.</h1>
+        <p class="intro-copy">
+          Deterministic simulator telemetry, action values, and failure analysis
+          from the policy actually running below.
+        </p>
+      </section>
+
+      <section class="lab" aria-label="Live simulator">
+        <div class="game-column">
+          <div class="game-heading">
+            <div>
+              <span class="label">Episode score</span>
+              <strong id="score">0.0</strong>
+            </div>
+            <div class="game-meta">
+              <span>Seed <b id="seed">0</b></span>
+              <span>Episode <b id="episode">0</b></span>
+              <span>Step <b id="step">0</b></span>
+            </div>
+          </div>
+          <div class="canvas-shell">
+            <canvas id="game" width="1200" height="360">
+              Live Dino simulator visualization.
+            </canvas>
+            <div class="canvas-message" id="canvas-message" hidden></div>
+          </div>
+          <div class="timeline" aria-label="Recent score">
+            <canvas id="score-chart" width="1200" height="120"></canvas>
+          </div>
+        </div>
+
+        <aside class="telemetry" aria-label="Policy telemetry">
+          <div class="action-readout">
+            <span class="label">Chosen action</span>
+            <strong id="action">NOOP</strong>
+            <span id="reward">Reward +0.000</span>
+          </div>
+
+          <div class="q-panel">
+            <div class="panel-heading">
+              <span class="label">Action values</span>
+              <span id="q-mode">Heuristic policy</span>
+            </div>
+            <div id="q-values" class="q-values">
+              <p class="empty">Load a DQN checkpoint to inspect Q-values.</p>
+            </div>
+          </div>
+
+          <dl class="metrics">
+            <div>
+              <dt>Game speed</dt>
+              <dd id="speed-metric">6.0</dd>
+            </div>
+            <div>
+              <dt>Survival</dt>
+              <dd id="survival">0.0s</dd>
+            </div>
+            <div>
+              <dt>Jumping</dt>
+              <dd id="jumping">No</dd>
+            </div>
+            <div>
+              <dt>Ducking</dt>
+              <dd id="ducking">No</dd>
+            </div>
+          </dl>
+        </aside>
+      </section>
+
+      <section class="controls" aria-label="Demo controls">
+        <div class="control-copy">
+          <p class="kicker">Experiment controls</p>
+          <h2>Replay the same world. Change the pace.</h2>
+        </div>
+        <form id="controls-form">
+          <label>
+            Seed
+            <input id="seed-input" type="number" min="-2147483648" max="2147483647" value="0">
+          </label>
+          <label>
+            Playback
+            <select id="speed-input">
+              <option value="0.5">0.5x</option>
+              <option value="1" selected>1x</option>
+              <option value="2">2x</option>
+              <option value="4">4x</option>
+              <option value="8">8x</option>
+            </select>
+          </label>
+          <button type="button" class="button secondary" id="pause">Pause</button>
+          <button type="submit" class="button primary">Reset episode</button>
+        </form>
+      </section>
+
+      <section class="policy-detail">
+        <p class="kicker">Policy identity</p>
+        <div class="identity-grid" id="identity-grid">
+          <p class="empty">Waiting for simulator identity.</p>
+        </div>
+      </section>
+    </main>
+
+    <div class="error-banner" id="error-banner" role="alert" hidden>
+      Demo connection lost. The simulator has stopped advancing.
+    </div>
+    <script src="/app.js"></script>
+  </body>
+</html>
