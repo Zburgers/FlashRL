@@ -97,6 +97,17 @@ def select_action(model, obs, env, epsilon: float, device: torch.device) -> int:
     return int(q_values.argmax(dim=1).item())
 
 
+def compute_td_target(
+    rewards: torch.Tensor,
+    discounts: torch.Tensor,
+    next_q: torch.Tensor,
+    terminated: torch.Tensor,
+) -> torch.Tensor:
+    """Compute a target that bootstraps through time-limit truncations."""
+
+    return rewards + discounts * next_q * (~terminated.bool()).float()
+
+
 def optimize(
     policy_net,
     target_net,
@@ -112,7 +123,12 @@ def optimize(
     next_obs = batch_obs([t.next_obs for t in transitions], device)
     actions = torch.tensor([t.action for t in transitions], device=device, dtype=torch.long).unsqueeze(1)
     rewards = torch.tensor([t.reward for t in transitions], device=device, dtype=torch.float32)
-    dones = torch.tensor([t.done for t in transitions], device=device, dtype=torch.float32)
+    terminated = torch.tensor(
+        [t.terminated for t in transitions], device=device, dtype=torch.bool
+    )
+    discounts = torch.tensor(
+        [t.discount for t in transitions], device=device, dtype=torch.float32
+    )
     weights_t = torch.tensor(weights, device=device, dtype=torch.float32)
 
     q = policy_net(obs).gather(1, actions).squeeze(1)
@@ -122,7 +138,7 @@ def optimize(
             next_q = target_net(next_obs).gather(1, next_actions).squeeze(1)
         else:
             next_q = target_net(next_obs).max(dim=1).values
-        target = rewards + (cfg.gamma**cfg.n_step) * next_q * (1.0 - dones)
+        target = compute_td_target(rewards, discounts, next_q, terminated)
     td_error = target - q
     loss = (F.smooth_l1_loss(q, target, reduction="none") * weights_t).mean()
     optimizer.zero_grad()
@@ -172,7 +188,18 @@ def train_dqn(cfg: DQNConfig) -> dict[str, Any]:
     with metrics_path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(
             fh,
-            fieldnames=["episode", "reward", "score", "steps", "epsilon", "loss", "wall_clock_s"],
+            fieldnames=[
+                "episode",
+                "reward",
+                "score",
+                "steps",
+                "epsilon",
+                "loss",
+                "terminated",
+                "truncated",
+                "ending_reason",
+                "wall_clock_s",
+            ],
         )
         writer.writeheader()
         for episode in range(cfg.episodes):
@@ -185,7 +212,15 @@ def train_dqn(cfg: DQNConfig) -> dict[str, Any]:
                 action = select_action(policy_net, obs, env, epsilon, device)
                 next_obs, reward, terminated, truncated, info = env.step(action)
                 done = terminated or truncated
-                transition = Transition(obs, action, reward, next_obs, done)
+                transition = Transition(
+                    obs=obs,
+                    action=action,
+                    reward=reward,
+                    next_obs=next_obs,
+                    terminated=terminated,
+                    truncated=truncated,
+                    discount=cfg.gamma,
+                )
                 ready_transition = n_step.append(transition)
                 if ready_transition is not None:
                     replay.push(ready_transition)
@@ -207,6 +242,13 @@ def train_dqn(cfg: DQNConfig) -> dict[str, Any]:
                 "steps": info.get("steps", 0),
                 "epsilon": epsilon_by_step(total_steps, cfg),
                 "loss": float(np.mean(losses)) if losses else "",
+                "terminated": terminated,
+                "truncated": truncated,
+                "ending_reason": (
+                    info.get("death_type", "terminated")
+                    if terminated
+                    else "time_limit"
+                ),
                 "wall_clock_s": time.time() - started,
             }
             writer.writerow(row)
