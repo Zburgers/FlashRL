@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -20,9 +21,7 @@ def load_rows(paths: list[str]) -> list[dict[str, str]]:
     return rows
 
 
-def summarize(
-    rows: list[dict[str, Any]]
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def summarize(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     return summarize_results(rows)
 
 
@@ -45,21 +44,29 @@ def write_markdown(rows: list[dict[str, Any]], out: Path) -> None:
             fh.write("| " + " | ".join(str(row[h]) for h in headers) + " |\n")
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Aggregate FlashRL result CSV files")
+def configure_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("paths", nargs="+", help="CSV paths or glob patterns")
     parser.add_argument("--out", default="reports/benchmark_summary.md")
-    return parser.parse_args()
 
 
-def main() -> None:
-    args = parse_args()
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Aggregate FlashRL result CSV files")
+    configure_parser(parser)
+    return parser.parse_args(argv)
+
+
+def run(args: argparse.Namespace) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     run_rows, experiment_rows = summarize(load_rows(args.paths))
     write_markdown(experiment_rows, Path(args.out))
     run_path = Path(args.out).with_suffix(".runs.json")
     run_path.write_text(json.dumps(run_rows, indent=2), encoding="utf-8")
     print(f"wrote {args.out}")
     print(f"wrote {run_path}")
+    return run_rows, experiment_rows
+
+
+def main(argv: Sequence[str] | None = None) -> None:
+    run(parse_args(argv))
 
 
 if __name__ == "__main__":

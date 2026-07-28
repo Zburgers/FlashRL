@@ -1,0 +1,84 @@
+"""Canonical command-line interface for FlashRL."""
+
+from __future__ import annotations
+
+import argparse
+import json
+from collections.abc import Sequence
+from pathlib import Path
+
+from flashrl import __version__
+from flashrl.benchmark import aggregate, evaluate, train
+from flashrl.doctor import collect_diagnostics
+
+
+def _run_doctor(args: argparse.Namespace) -> dict:
+    diagnostics = collect_diagnostics(args.artifact_dir)
+    print(json.dumps(diagnostics, indent=2))
+    return diagnostics
+
+
+def _demo_not_built(_: argparse.Namespace) -> None:
+    raise SystemExit("The live demo is installed in the next implementation task.")
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="flashrl",
+        description="Reproducible reinforcement learning for the FlashRL Dino simulator.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
+    commands = parser.add_subparsers(dest="command")
+
+    train_parser = commands.add_parser(
+        "train", description="Train a versioned FlashRL DQN experiment."
+    )
+    train.configure_parser(train_parser)
+    train_parser.set_defaults(handler=train.run)
+
+    evaluate_parser = commands.add_parser(
+        "evaluate", description="Evaluate baselines or a trained checkpoint."
+    )
+    evaluate.configure_parser(evaluate_parser)
+    evaluate_parser.set_defaults(handler=evaluate.run)
+
+    aggregate_parser = commands.add_parser(
+        "aggregate", description="Aggregate compatible benchmark results safely."
+    )
+    aggregate.configure_parser(aggregate_parser)
+    aggregate_parser.set_defaults(handler=aggregate.run)
+
+    doctor_parser = commands.add_parser(
+        "doctor", description="Inspect the local FlashRL experiment environment."
+    )
+    doctor_parser.add_argument("--artifact-dir", type=Path, default=Path("runs"))
+    doctor_parser.set_defaults(handler=_run_doctor)
+
+    demo_parser = commands.add_parser(
+        "demo", description="Launch the live learned-policy simulator demo."
+    )
+    demo_parser.add_argument("--checkpoint", default="")
+    demo_parser.add_argument("--policy", choices=["rule", "random", "dqn"], default="rule")
+    demo_parser.add_argument("--seed", type=int, default=0)
+    demo_parser.add_argument("--port", type=int, default=8765)
+    demo_parser.add_argument("--no-open", action="store_true")
+    demo_parser.set_defaults(handler=_demo_not_built)
+    return parser
+
+
+def main(argv: Sequence[str] | None = None):
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if not hasattr(args, "handler"):
+        parser.print_help()
+        return 0
+    args.handler(args)
+    return 0
+
+
+if __name__ == "__main__":
+    main()

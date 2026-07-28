@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import argparse
 import csv
-from datetime import datetime, timezone
 import json
-from pathlib import Path
 import statistics
 import time
+from collections.abc import Sequence
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from flashrl.agents.baselines import RandomAgent, RuleBasedDinoAgent
@@ -83,9 +84,7 @@ def evaluate_policy(
                 "result_schema_version": RESULT_SCHEMA_VERSION,
                 "evaluation_run_id": run_id,
                 "training_run_id": identity.get("training_run_id", ""),
-                "experiment_id": identity.get(
-                    "experiment_id", f"{algorithm}-baseline"
-                ),
+                "experiment_id": identity.get("experiment_id", f"{algorithm}-baseline"),
                 "algorithm_id": identity.get("algorithm_id", algorithm),
                 "hyperparameter_hash": identity.get("hyperparameter_hash", ""),
                 "training_seed": identity.get("training_seed", ""),
@@ -113,14 +112,10 @@ def evaluate_policy(
                 "terminated": terminated,
                 "truncated": truncated,
                 "ending_reason": (
-                    info.get("death_type", "terminated")
-                    if terminated
-                    else "time_limit"
+                    info.get("death_type", "terminated") if terminated else "time_limit"
                 ),
                 "train_frames": identity.get("train_frames", train_frames),
-                "wall_clock_train_s": identity.get(
-                    "wall_clock_train_s", wall_clock_train_s
-                ),
+                "wall_clock_train_s": identity.get("wall_clock_train_s", wall_clock_train_s),
                 "wall_clock_episode_s": time.perf_counter() - episode_started,
                 "checkpoint_role": identity.get("checkpoint_role", ""),
                 "checkpoint_path": checkpoint_path,
@@ -152,9 +147,7 @@ def evaluate_checkpoint(
     )
     policy = DQNPolicy(str(checkpoint_path))
     policy.bind_env(env)
-    evaluation_run_id = datetime.now(timezone.utc).strftime(
-        "dqn_eval_%Y%m%dT%H%M%SZ"
-    )
+    evaluation_run_id = datetime.now(timezone.utc).strftime("dqn_eval_%Y%m%dT%H%M%SZ")
     manifest_path = checkpoint_path.parent / "manifest.json"
     try:
         return evaluate_policy(
@@ -207,8 +200,7 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, float]:
     }
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Evaluate FlashRL agents")
+def configure_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--agent", choices=["random", "rule", "dqn"], default="rule")
     parser.add_argument("--checkpoint", default="")
     parser.add_argument("--episodes", type=int, default=20)
@@ -221,11 +213,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--phase", default="eval")
     parser.add_argument("--out", default="results/eval.csv")
     parser.add_argument("--jsonl-out", default="")
-    return parser.parse_args()
 
 
-def main() -> None:
-    args = parse_args()
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Evaluate FlashRL agents")
+    configure_parser(parser)
+    return parser.parse_args(argv)
+
+
+def run(args: argparse.Namespace) -> list[dict[str, Any]]:
     if args.agent == "dqn":
         if not args.checkpoint:
             raise SystemExit("--checkpoint is required for --agent dqn")
@@ -236,9 +232,7 @@ def main() -> None:
             phase=args.phase,
         )
     else:
-        run_id = datetime.now(timezone.utc).strftime(
-            f"{args.agent}_%Y%m%dT%H%M%SZ"
-        )
+        run_id = datetime.now(timezone.utc).strftime(f"{args.agent}_%Y%m%dT%H%M%SZ")
         env = DinoEnv(
             obs_mode=args.obs_mode,
             action_mode=args.action_mode,
@@ -266,6 +260,11 @@ def main() -> None:
     print(json.dumps(summarize(rows), indent=2))
     print(f"wrote {csv_path}")
     print(f"wrote {jsonl_path}")
+    return rows
+
+
+def main(argv: Sequence[str] | None = None) -> None:
+    run(parse_args(argv))
 
 
 if __name__ == "__main__":
