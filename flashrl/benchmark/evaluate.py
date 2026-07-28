@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -13,36 +12,17 @@ import time
 from typing import Any
 
 from flashrl.agents.baselines import RandomAgent, RuleBasedDinoAgent
+from flashrl.artifacts import sha256_file
 from flashrl.envs import DinoEnv
-
-
-RESULT_FIELDS = [
-    "run_id",
-    "git_commit",
-    "seed",
-    "eval_seed",
-    "game",
-    "backend",
-    "obs_mode",
-    "action_mode",
-    "agent",
-    "algorithm",
-    "phase",
-    "episode",
-    "score",
-    "median_score_so_far",
-    "survival_time_s",
-    "steps",
-    "obstacles_cleared",
-    "death_type",
-    "terminated",
-    "truncated",
-    "train_frames",
-    "wall_clock_train_s",
-    "wall_clock_eval_s",
-    "checkpoint_path",
-    "config_path",
-]
+from flashrl.results import RESULT_FIELDS, RESULT_SCHEMA_VERSION
+from flashrl.schemas import (
+    ACTION_SCHEMA_VERSION,
+    ENVIRONMENT_ID,
+    ENVIRONMENT_VERSION,
+    OBSERVATION_SCHEMA_VERSION,
+    REWARD_SCHEMA_VERSION,
+    SIMULATOR_VERSION,
+)
 
 
 def _git_commit() -> str:
@@ -83,12 +63,14 @@ def evaluate_policy(
     config_path: str = "",
     train_frames: int = 0,
     wall_clock_train_s: float = 0.0,
+    identity: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    scores: list[float] = []
-    started = time.time()
+    identity = identity or {}
     for episode in range(episodes):
-        obs, _ = env.reset(seed=eval_seed + episode)
+        episode_seed = eval_seed + episode
+        episode_started = time.perf_counter()
+        obs, _ = env.reset(seed=episode_seed)
         terminated = False
         truncated = False
         info: dict[str, Any] = {}
@@ -96,37 +78,110 @@ def evaluate_policy(
             action = agent.act(obs)
             obs, _, terminated, truncated, info = env.step(action)
         score = float(info.get("score", 0.0))
-        scores.append(score)
         rows.append(
             {
-                "run_id": run_id,
-                "git_commit": _git_commit(),
-                "seed": env._seed,
-                "eval_seed": eval_seed,
-                "game": "dino",
+                "result_schema_version": RESULT_SCHEMA_VERSION,
+                "evaluation_run_id": run_id,
+                "training_run_id": identity.get("training_run_id", ""),
+                "experiment_id": identity.get(
+                    "experiment_id", f"{algorithm}-baseline"
+                ),
+                "algorithm_id": identity.get("algorithm_id", algorithm),
+                "hyperparameter_hash": identity.get("hyperparameter_hash", ""),
+                "training_seed": identity.get("training_seed", ""),
+                "evaluation_seed_base": eval_seed,
+                "episode_seed": episode_seed,
+                "training_git_commit": identity.get("training_git_commit", ""),
+                "evaluation_git_commit": _git_commit(),
+                "environment_id": ENVIRONMENT_ID,
+                "environment_version": ENVIRONMENT_VERSION,
+                "simulator_version": SIMULATOR_VERSION,
+                "observation_schema_version": OBSERVATION_SCHEMA_VERSION,
+                "action_schema_version": ACTION_SCHEMA_VERSION,
+                "reward_schema_version": REWARD_SCHEMA_VERSION,
                 "backend": env.backend,
                 "obs_mode": env.obs_mode,
                 "action_mode": env.action_mode,
                 "agent": agent_name,
-                "algorithm": algorithm,
                 "phase": phase,
                 "episode": episode,
                 "score": score,
-                "median_score_so_far": statistics.median(scores),
                 "survival_time_s": info.get("survival_time_s", 0.0),
                 "steps": info.get("steps", 0),
                 "obstacles_cleared": info.get("obstacles_cleared", 0),
                 "death_type": info.get("death_type", "unknown"),
                 "terminated": terminated,
                 "truncated": truncated,
-                "train_frames": train_frames,
-                "wall_clock_train_s": wall_clock_train_s,
-                "wall_clock_eval_s": time.time() - started,
+                "ending_reason": (
+                    info.get("death_type", "terminated")
+                    if terminated
+                    else "time_limit"
+                ),
+                "train_frames": identity.get("train_frames", train_frames),
+                "wall_clock_train_s": identity.get(
+                    "wall_clock_train_s", wall_clock_train_s
+                ),
+                "wall_clock_episode_s": time.perf_counter() - episode_started,
+                "checkpoint_role": identity.get("checkpoint_role", ""),
                 "checkpoint_path": checkpoint_path,
-                "config_path": config_path,
+                "checkpoint_sha256": identity.get("checkpoint_sha256", ""),
+                "manifest_path": identity.get("manifest_path", config_path),
             }
         )
     return rows
+
+
+def evaluate_checkpoint(
+    checkpoint_path: str | Path,
+    *,
+    episodes: int,
+    eval_seed: int,
+    phase: str = "eval",
+) -> list[dict[str, Any]]:
+    from flashrl.agents.dqn.train import DQNConfig, DQNPolicy, load_checkpoint
+
+    checkpoint_path = Path(checkpoint_path)
+    checkpoint = load_checkpoint(checkpoint_path)
+    cfg = DQNConfig(**checkpoint["config"])
+    env = DinoEnv(
+        obs_mode=cfg.obs_mode,
+        action_mode=cfg.action_mode,
+        backend="sim",
+        max_episode_steps=cfg.max_episode_steps,
+        seed=cfg.seed,
+    )
+    policy = DQNPolicy(str(checkpoint_path))
+    policy.bind_env(env)
+    evaluation_run_id = datetime.now(timezone.utc).strftime(
+        "dqn_eval_%Y%m%dT%H%M%SZ"
+    )
+    manifest_path = checkpoint_path.parent / "manifest.json"
+    try:
+        return evaluate_policy(
+            policy,
+            env,
+            episodes=episodes,
+            eval_seed=eval_seed,
+            run_id=evaluation_run_id,
+            agent_name="dqn",
+            algorithm=checkpoint.get("experiment_id", "dqn"),
+            phase=phase,
+            checkpoint_path=str(checkpoint_path),
+            identity={
+                "training_run_id": checkpoint["run_id"],
+                "experiment_id": checkpoint["experiment_id"],
+                "algorithm_id": checkpoint["experiment_id"].rsplit("-", 1)[0],
+                "hyperparameter_hash": checkpoint["hyperparameter_hash"],
+                "training_seed": cfg.seed,
+                "training_git_commit": checkpoint["git_commit"],
+                "train_frames": checkpoint["train_frames"],
+                "checkpoint_role": checkpoint["role"],
+                "checkpoint_sha256": sha256_file(checkpoint_path),
+                "manifest_path": str(manifest_path),
+            },
+        )
+    finally:
+        env.close()
 
 
 def write_results(rows: list[dict[str, Any]], csv_path: Path, jsonl_path: Path) -> None:
@@ -161,7 +216,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--eval-seed", type=int, default=1000)
     parser.add_argument("--obs-mode", choices=["state", "vision", "hybrid"], default="state")
     parser.add_argument("--action-mode", choices=["minimal", "full"], default="full")
-    parser.add_argument("--backend", choices=["sim", "browser", "chrome"], default="sim")
+    parser.add_argument("--backend", choices=["sim"], default="sim")
     parser.add_argument("--max-episode-steps", type=int, default=1000)
     parser.add_argument("--phase", default="eval")
     parser.add_argument("--out", default="results/eval.csv")
@@ -171,27 +226,40 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    run_id = datetime.now(timezone.utc).strftime(f"{args.agent}_%Y%m%dT%H%M%SZ")
-    env = DinoEnv(
-        obs_mode=args.obs_mode,
-        action_mode=args.action_mode,
-        backend=args.backend,
-        max_episode_steps=args.max_episode_steps,
-        seed=args.seed,
-    )
-    agent = make_agent(args.agent, env, seed=args.seed, checkpoint=args.checkpoint or None)
-    rows = evaluate_policy(
-        agent,
-        env,
-        episodes=args.episodes,
-        eval_seed=args.eval_seed,
-        run_id=run_id,
-        agent_name=args.agent,
-        algorithm=args.agent,
-        phase=args.phase,
-        checkpoint_path=args.checkpoint,
-    )
-    env.close()
+    if args.agent == "dqn":
+        if not args.checkpoint:
+            raise SystemExit("--checkpoint is required for --agent dqn")
+        rows = evaluate_checkpoint(
+            args.checkpoint,
+            episodes=args.episodes,
+            eval_seed=args.eval_seed,
+            phase=args.phase,
+        )
+    else:
+        run_id = datetime.now(timezone.utc).strftime(
+            f"{args.agent}_%Y%m%dT%H%M%SZ"
+        )
+        env = DinoEnv(
+            obs_mode=args.obs_mode,
+            action_mode=args.action_mode,
+            backend=args.backend,
+            max_episode_steps=args.max_episode_steps,
+            seed=args.seed,
+        )
+        agent = make_agent(args.agent, env, seed=args.seed)
+        try:
+            rows = evaluate_policy(
+                agent,
+                env,
+                episodes=args.episodes,
+                eval_seed=args.eval_seed,
+                run_id=run_id,
+                agent_name=args.agent,
+                algorithm=args.agent,
+                phase=args.phase,
+            )
+        finally:
+            env.close()
     csv_path = Path(args.out)
     jsonl_path = Path(args.jsonl_out) if args.jsonl_out else csv_path.with_suffix(".jsonl")
     write_results(rows, csv_path, jsonl_path)
