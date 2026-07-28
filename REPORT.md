@@ -146,6 +146,25 @@ The final protocol therefore uses uniform replay, three-step returns, `5e-4`
 learning rate, 500-frame target updates, 500-frame replay warmup, four-frame
 training cadence, and exploration decay over 15,000 frames.
 
+### Independent five-seed component benchmark
+
+After protocol selection, a new seed set (13, 31, 53, 73, 97) and new held-out
+set (300,000 through 300,099) compared the minimum component matrix at an
+identical 30,000-frame budget:
+
+| Algorithm | Runs | Episodes | Mean | 95% train-seed CI |
+| --- | ---: | ---: | ---: | ---: |
+| Recommended Dueling Double N3 | 5 | 500 | **289.67** | [260.28, 320.35] |
+| Dueling Double | 5 | 500 | 255.79 | [225.62, 285.96] |
+| Vanilla DQN | 5 | 500 | 238.68 | [196.92, 283.87] |
+| Double DQN | 5 | 500 | 199.37 | [175.20, 223.53] |
+
+N3 improves 13.2% over the same Dueling Double architecture with one-step
+targets. This independent replication strengthens the return-horizon finding;
+it also shows that Double DQN alone regresses at this budget. Full hashes and
+per-seed values are in
+[reports/v2_component_report.md](reports/v2_component_report.md).
+
 ## Final benchmark
 
 Each final policy receives exactly 120,000 environment frames. Checkpoints are

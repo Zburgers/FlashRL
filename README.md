@@ -33,7 +33,8 @@ hand-engineered controller.
 
 [Read the benchmark report](reports/v2_benchmark_report.md) ·
 [inspect per-run data](reports/v2_benchmark_runs.csv) ·
-[review the ablation study](reports/v2_pilot_report.md)
+[review the ablation study](reports/v2_pilot_report.md) ·
+[compare DQN components](reports/v2_component_report.md)
 
 ![Frame-aligned learning curves](reports/figures/learning_curves.svg)
 
@@ -149,6 +150,11 @@ The implementation keeps vanilla DQN, Double Q-learning, dueling heads,
 prioritized replay, and N-step returns independently selectable. The pilot
 found three-step targets to be the robust gain; prioritized replay did not
 survive the equal-budget follow-up.
+
+A fresh five-seed component benchmark replicated that result at an equal
+30,000-frame budget: recommended N3 scored 289.67, Dueling Double 255.79,
+vanilla 238.68, and Double DQN 199.37, with 100 held-out episodes per trained
+policy.
 
 ## Supported surface
 
