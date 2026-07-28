@@ -1,0 +1,44 @@
+name: Experiment proposal
+description: Propose a controlled RL hypothesis
+title: "[Experiment] "
+labels: ["research"]
+body:
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: Falsifiable hypothesis
+      placeholder: Changing X should improve held-out Y under fixed budget Z because...
+    validations:
+      required: true
+  - type: textarea
+    id: control
+    attributes:
+      label: Control and one-factor change
+    validations:
+      required: true
+  - type: textarea
+    id: protocol
+    attributes:
+      label: Protocol
+      description: State frame budget, train seeds, selection seeds, final seeds, episodes, and metrics.
+    validations:
+      required: true
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Required artifacts
+      description: Config, manifests, checkpoint hashes, raw results, report, and compute cost.
+    validations:
+      required: true
+  - type: checkboxes
+    id: integrity
+    attributes:
+      label: Integrity checks
+      options:
+        - label: The final evaluation seeds are not used for tuning.
+          required: true
+        - label: Results will be summarized across independent training runs.
+          required: true
+        - label: Negative findings will be retained.
+          required: true
+

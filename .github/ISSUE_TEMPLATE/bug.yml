@@ -1,0 +1,55 @@
+name: Bug report
+description: Report a reproducible FlashRL defect
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for providing evidence that lets us reproduce the defect.
+  - type: input
+    id: version
+    attributes:
+      label: FlashRL version and commit
+      placeholder: flashrl 2.0.0, commit SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - Simulator environment
+        - DQN training
+        - Evaluation or analysis
+        - Checkpoint or manifest
+        - Live demo
+        - Packaging or CI
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: Include the exact command, seed, and smallest relevant config.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: Paste flashrl doctor output and any traceback. Remove secrets.
+      render: text
+

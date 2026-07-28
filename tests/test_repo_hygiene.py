@@ -65,3 +65,37 @@ def test_generated_directories_are_ignored():
     ignore = Path(".gitignore").read_text(encoding="utf-8")
     for entry in ["runs/", "logs/", "dist/", "*.pt", "results/*.csv"]:
         assert entry in ignore
+
+
+def test_v2_documentation_has_tested_surface_and_no_retired_claims():
+    readme = Path("README.md").read_text(encoding="utf-8")
+    report = Path("REPORT.md").read_text(encoding="utf-8")
+    combined = readme + report
+    for command in [
+        'pip install -e ".[dev]"',
+        "flashrl demo",
+        "flashrl experiment",
+        "flashrl analyze",
+        "python scripts/smoke_test.py",
+    ]:
+        assert command in combined
+    assert "301.90" in combined
+    for retired in [
+        "--backend browser",
+        "--backend chrome",
+        "train_ppo",
+        "requirements.txt",
+        "checkpoint.pt",
+    ]:
+        assert retired not in combined
+
+
+def test_contributor_and_github_templates_exist():
+    for path in [
+        "CONTRIBUTING.md",
+        "CHANGELOG.md",
+        ".github/ISSUE_TEMPLATE/bug.yml",
+        ".github/ISSUE_TEMPLATE/experiment.yml",
+        ".github/pull_request_template.md",
+    ]:
+        assert Path(path).is_file()
