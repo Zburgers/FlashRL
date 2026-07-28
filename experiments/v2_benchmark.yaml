@@ -1,0 +1,40 @@
+{
+  "name": "v2-benchmark",
+  "output_dir": "runs/v2-benchmark",
+  "seeds": [11, 29, 47, 71, 89],
+  "evaluation": {
+    "episodes": 100,
+    "seed_base": 200000
+  },
+  "base": {
+    "episodes": 1000,
+    "max_episode_steps": 1000,
+    "obs_mode": "state",
+    "action_mode": "full",
+    "backend": "sim",
+    "gamma": 0.99,
+    "learning_rate": 0.0003,
+    "batch_size": 64,
+    "replay_size": 100000,
+    "warmup_steps": 1000,
+    "target_update_steps": 500,
+    "train_every": 4,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.05,
+    "epsilon_decay_steps": 30000,
+    "double_dqn": true,
+    "dueling": true,
+    "prioritized_replay": false,
+    "n_step": 3,
+    "selection_interval_episodes": 50,
+    "selection_episodes": 20,
+    "selection_seed": 50000,
+    "device": "auto"
+  },
+  "variants": [
+    {
+      "name": "recommended",
+      "overrides": {}
+    }
+  ]
+}

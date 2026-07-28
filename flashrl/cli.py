@@ -31,6 +31,29 @@ def _run_demo(args: argparse.Namespace) -> None:
     )
 
 
+def _run_experiment(args: argparse.Namespace) -> list[dict]:
+    from flashrl.experiments import execute_experiment, load_experiment
+
+    records = execute_experiment(
+        load_experiment(args.configuration),
+        dry_run=args.dry_run,
+        resume=args.resume,
+        workers=args.workers,
+    )
+    print(json.dumps(records, indent=2))
+    return records
+
+
+def _run_analysis(args: argparse.Namespace):
+    from flashrl.analysis import generate_report
+
+    return generate_report(
+        args.run_dir,
+        out=args.out,
+        publish_data=args.publish_data or None,
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="flashrl",
@@ -77,6 +100,23 @@ def build_parser() -> argparse.ArgumentParser:
     demo_parser.add_argument("--port", type=int, default=8765)
     demo_parser.add_argument("--no-open", action="store_true")
     demo_parser.set_defaults(handler=_run_demo)
+
+    experiment_parser = commands.add_parser(
+        "experiment", description="Run a reproducible RL experiment matrix."
+    )
+    experiment_parser.add_argument("configuration", type=Path)
+    experiment_parser.add_argument("--dry-run", action="store_true")
+    experiment_parser.add_argument("--resume", action="store_true")
+    experiment_parser.add_argument("--workers", type=int, default=1)
+    experiment_parser.set_defaults(handler=_run_experiment)
+
+    analyze_parser = commands.add_parser(
+        "analyze", description="Generate a traceable RL research report."
+    )
+    analyze_parser.add_argument("run_dir", type=Path)
+    analyze_parser.add_argument("--out", type=Path, default=Path("reports/experiment.md"))
+    analyze_parser.add_argument("--publish-data", type=Path, default=None)
+    analyze_parser.set_defaults(handler=_run_analysis)
     return parser
 
 

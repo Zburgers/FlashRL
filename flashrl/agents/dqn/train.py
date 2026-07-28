@@ -319,7 +319,7 @@ def train_dqn(cfg: DQNConfig, resume_path: str | Path | None = None) -> dict[str
     identity_config = {
         key: value
         for key, value in config_payload.items()
-        if key not in {"episodes", "output_dir", "run_id", "device"}
+        if key not in {"episodes", "output_dir", "run_id", "device", "seed"}
     }
     variant_id = algorithm_id(
         cfg.double_dqn,

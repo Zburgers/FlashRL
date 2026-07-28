@@ -19,6 +19,8 @@ def test_cli_version(capsys):
         ("aggregate", "Aggregate"),
         ("doctor", "environment"),
         ("demo", "live"),
+        ("experiment", "matrix"),
+        ("analyze", "research"),
     ],
 )
 def test_cli_exposes_canonical_commands(command, description):

@@ -69,3 +69,25 @@ def test_training_finalizes_manifest_with_artifact_hashes(tmp_path):
     assert manifest["artifacts"]["last.pt"]["sha256"] == sha256_file(
         tmp_path / result["run_id"] / "last.pt"
     )
+
+
+def test_training_seed_is_not_part_of_hyperparameter_identity(tmp_path):
+    manifests = []
+    for seed in (3, 9):
+        result = train_dqn(
+            DQNConfig(
+                episodes=1,
+                max_episode_steps=1,
+                seed=seed,
+                batch_size=1,
+                warmup_steps=1,
+                replay_size=2,
+                selection_episodes=1,
+                output_dir=str(tmp_path),
+                run_id=f"seed-{seed}",
+            )
+        )
+        manifests.append(json.loads((tmp_path / result["run_id"] / "manifest.json").read_text()))
+    assert manifests[0]["experiment_id"] == manifests[1]["experiment_id"]
+    assert manifests[0]["hyperparameter_hash"] == manifests[1]["hyperparameter_hash"]
+    assert manifests[0]["training_seed"] != manifests[1]["training_seed"]
