@@ -1,0 +1,14 @@
+"""Stable identity constants for FlashRL simulator artifacts."""
+
+ENVIRONMENT_ID = "FlashRL-DinoSim-v2"
+ENVIRONMENT_VERSION = 2
+OBSERVATION_SCHEMA_VERSION = 2
+ACTION_SCHEMA_VERSION = 2
+REWARD_SCHEMA_VERSION = 2
+SIMULATOR_VERSION = 2
+
+NOOP = 0
+JUMP = 1
+DUCK = 2
+RELEASE = 3
+

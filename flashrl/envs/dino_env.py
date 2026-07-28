@@ -1,18 +1,13 @@
-"""Gymnasium-compatible Chrome Dino benchmark environment.
+"""Gymnasium-compatible FlashRL Dino simulator.
 
-The default backend is a deterministic Python simulator. It mirrors the core
-endless-runner mechanics closely enough for fast training, CI, and reproducible
-baselines. Browser-backed play is optional because it requires Playwright
-browsers and a display/headless Chromium runtime.
+The deterministic Python simulator supports fast training, CI, reproducible
+baselines, simulator pixels, and the live visualization surface.
 """
 
 from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass
-from pathlib import Path
-import math
-import time
 from typing import Any, Literal
 
 import gymnasium as gym
@@ -22,7 +17,7 @@ from PIL import Image, ImageDraw
 
 ObsMode = Literal["state", "vision", "hybrid"]
 ActionMode = Literal["minimal", "full"]
-Backend = Literal["sim", "browser", "chrome"]
+Backend = Literal["sim"]
 
 
 STATE_KEYS = (
@@ -35,8 +30,20 @@ STATE_KEYS = (
     "next_obstacle_width",
     "next_obstacle_height",
     "next_obstacle_type_id",
+    "next_obstacle_bottom",
+    "next_obstacle_top",
     "second_obstacle_distance",
-    "score",
+)
+
+STATE_INDEX = {name: index for index, name in enumerate(STATE_KEYS)}
+
+STATE_LOW = np.array(
+    [0.0, -1.0, 0.0, 0.0, 0.0, -0.1, 0.0, 0.0, 0.0, 0.0, 0.0, -0.1],
+    dtype=np.float32,
+)
+STATE_HIGH = np.array(
+    [1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.2, 2.0],
+    dtype=np.float32,
 )
 
 
@@ -60,8 +67,6 @@ class DinoEnv(gym.Env):
         obs_mode: ObsMode = "state",
         action_mode: ActionMode = "full",
         render_mode: str | None = None,
-        headless: bool = True,
-        game_url: str | None = None,
         max_episode_steps: int = 5000,
         fixed_timestep_ms: int = 50,
         seed: int | None = None,
@@ -74,14 +79,14 @@ class DinoEnv(gym.Env):
             raise ValueError(f"Unsupported obs_mode: {obs_mode}")
         if action_mode not in {"minimal", "full"}:
             raise ValueError(f"Unsupported action_mode: {action_mode}")
-        if backend not in {"sim", "browser", "chrome"}:
-            raise ValueError(f"Unsupported backend: {backend}")
+        if backend != "sim":
+            raise ValueError(
+                f"Unsupported V2 backend: {backend}. FlashRL V2 is simulator-only."
+            )
 
         self.obs_mode = obs_mode
         self.action_mode = action_mode
         self.render_mode = render_mode
-        self.headless = headless
-        self.game_url = game_url
         self.max_episode_steps = int(max_episode_steps)
         self.fixed_timestep_ms = int(fixed_timestep_ms)
         self.backend = backend
@@ -90,7 +95,6 @@ class DinoEnv(gym.Env):
         self._seed = seed
         self._rng = np.random.default_rng(seed)
         self._closed = False
-        self._browser_objects: dict[str, Any] = {}
 
         self.action_space = spaces.Discrete(2 if action_mode == "minimal" else 4)
         self.observation_space = self._make_observation_space()
@@ -105,9 +109,8 @@ class DinoEnv(gym.Env):
 
     def _make_observation_space(self) -> spaces.Space:
         state_space = spaces.Box(
-            low=-10.0,
-            high=10.0,
-            shape=(len(STATE_KEYS),),
+            low=STATE_LOW,
+            high=STATE_HIGH,
             dtype=np.float32,
         )
         image_space = spaces.Box(
@@ -135,9 +138,6 @@ class DinoEnv(gym.Env):
         if options:
             self._apply_reset_options(options)
         self._reset_sim_state()
-        if self.backend in {"browser", "chrome"}:
-            self._ensure_browser()
-            self._reset_browser()
         obs = self._observe()
         return obs, self._info(reward_terms={})
 
@@ -150,21 +150,12 @@ class DinoEnv(gym.Env):
         if action < 0 or action >= self.action_space.n:
             raise ValueError(f"Invalid action {action} for {self.action_space}")
 
-        try:
-            if self.backend in {"browser", "chrome"}:
-                self._send_browser_action(action)
-            reward, terminated, reward_terms = self._step_sim(action)
-            obs = self._observe()
-            truncated = self.steps >= self.max_episode_steps
-            info = self._info(reward_terms=reward_terms)
-            info["action_name"] = self.action_names[action]
-            return obs, float(reward), bool(terminated), bool(truncated), info
-        except Exception as exc:
-            obs = self._observe()
-            info = self._info(reward_terms={})
-            info["error"] = str(exc)
-            info["death_type"] = "browser_failure" if self.backend != "sim" else "sim_failure"
-            return obs, -10.0, False, True, info
+        reward, terminated, reward_terms = self._step_sim(action)
+        obs = self._observe()
+        truncated = self.steps >= self.max_episode_steps
+        info = self._info(reward_terms=reward_terms)
+        info["action_name"] = self.action_names[action]
+        return obs, float(reward), bool(terminated), bool(truncated), info
 
     def render(self) -> np.ndarray | None:
         frame = self._render_frame()
@@ -175,22 +166,6 @@ class DinoEnv(gym.Env):
     def close(self) -> None:
         if self._closed:
             return
-        page = self._browser_objects.get("page")
-        context = self._browser_objects.get("context")
-        browser = self._browser_objects.get("browser")
-        playwright = self._browser_objects.get("playwright")
-        for obj in (page, context, browser):
-            try:
-                if obj is not None:
-                    obj.close()
-            except Exception:
-                pass
-        try:
-            if playwright is not None:
-                playwright.stop()
-        except Exception:
-            pass
-        self._browser_objects.clear()
         self._closed = True
 
     def _apply_reset_options(self, options: dict[str, Any]) -> None:
@@ -336,8 +311,9 @@ class DinoEnv(gym.Env):
                 first.width / 60.0,
                 first.height / 80.0,
                 first.type_id / 2.0,
+                first.y / 80.0,
+                (first.y + first.height) / 100.0,
                 second.x / 900.0,
-                self.score / 1000.0,
             ],
             dtype=np.float32,
         )
@@ -390,47 +366,3 @@ class DinoEnv(gym.Env):
             "seed": self._seed,
             "reward_terms": reward_terms,
         }
-
-    def _ensure_browser(self) -> None:
-        if self._browser_objects:
-            return
-        from playwright.sync_api import sync_playwright
-
-        playwright = sync_playwright().start()
-        browser = playwright.chromium.launch(headless=self.headless)
-        context = browser.new_context(viewport={"width": 800, "height": 450})
-        page = context.new_page()
-        url = self.game_url
-        if url is None and self.backend == "browser":
-            url = Path("assets/dino_game.html").resolve().as_uri()
-        elif url is None:
-            url = "chrome://dino"
-        page.goto(url)
-        self._browser_objects = {
-            "playwright": playwright,
-            "browser": browser,
-            "context": context,
-            "page": page,
-        }
-
-    def _reset_browser(self) -> None:
-        page = self._browser_objects.get("page")
-        if page is None:
-            return
-        try:
-            page.keyboard.press("Space")
-            time.sleep(0.2)
-        except Exception:
-            pass
-
-    def _send_browser_action(self, action: int) -> None:
-        page = self._browser_objects.get("page")
-        if page is None:
-            return
-        if self.action_names[action] in {"JUMP", "JUMP_PRESS"}:
-            page.keyboard.press("Space")
-        elif self.action_names[action] == "DUCK_PRESS":
-            page.keyboard.down("ArrowDown")
-        elif self.action_names[action] == "RELEASE":
-            page.keyboard.up("ArrowDown")
-            page.keyboard.up("Space")

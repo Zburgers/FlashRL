@@ -5,6 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 import numpy as np
 
+from flashrl.envs.dino_env import STATE_INDEX
+from flashrl.schemas import DUCK, JUMP, NOOP, RELEASE
+
 
 class RandomAgent:
     def __init__(self, action_space, seed: int | None = None) -> None:
@@ -26,23 +29,23 @@ class RuleBasedDinoAgent:
 
     def act(self, obs) -> int:
         state = obs["state"] if isinstance(obs, dict) else obs
-        is_jumping = state[2] > 0.5
-        is_ducking = state[3] > 0.5
-        speed = max(0.1, state[4])
-        distance = state[5]
-        height = state[7]
-        type_id = state[8]
+        is_jumping = state[STATE_INDEX["is_jumping"]] > 0.5
+        is_ducking = state[STATE_INDEX["is_ducking"]] > 0.5
+        speed = max(0.1, state[STATE_INDEX["game_speed"]])
+        distance = state[STATE_INDEX["distance_to_next_obstacle"]]
+        type_id = state[STATE_INDEX["next_obstacle_type_id"]]
+        obstacle_bottom = state[STATE_INDEX["next_obstacle_bottom"]]
         jump_threshold = 0.24 + 0.24 * speed
 
         if self.action_mode == "minimal":
-            return int((not is_jumping) and distance < jump_threshold)
+            return JUMP if (not is_jumping) and distance < jump_threshold else NOOP
 
         is_bird = type_id > 0.75
-        low_bird = is_bird and height < 0.5
+        low_bird = is_bird and obstacle_bottom < 0.6
         if low_bird and distance < jump_threshold:
-            return 2
+            return DUCK
         if is_ducking and (not low_bird or distance > jump_threshold):
-            return 3
+            return RELEASE
         if (not is_jumping) and (not is_bird) and distance < jump_threshold:
-            return 1
-        return 0
+            return JUMP
+        return NOOP

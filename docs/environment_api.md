@@ -2,7 +2,8 @@
 
 ## Objective
 
-Define a stable Gymnasium-compatible browser-game API for Chrome Dino and future lightweight browser games.
+Define the stable Gymnasium API for the deterministic FlashRL Dino simulator.
+FlashRL V2 intentionally supports only `backend="sim"`.
 
 ## Required Gymnasium Contract
 
@@ -14,7 +15,9 @@ obs, reward, terminated, truncated, info = env.step(action)
 env.close()
 ```
 
-`terminated` means the game reached an MDP terminal state, such as a crash. `truncated` means an external limit ended the episode, such as `max_episode_steps` or browser failure.
+`terminated` means the game reached an MDP terminal state, such as a crash.
+`truncated` means the configured time limit ended the episode. Internal
+simulator failures raise immediately and never become training transitions.
 
 ## Constructor
 
@@ -27,11 +30,10 @@ class DinoEnv(gym.Env):
         obs_mode: str = "state",
         action_mode: str = "full",
         render_mode: str | None = None,
-        headless: bool = True,
-        game_url: str | None = None,
         max_episode_steps: int = 5000,
         fixed_timestep_ms: int = 50,
         seed: int | None = None,
+        backend: str = "sim",
     ):
         ...
 ```
@@ -45,7 +47,7 @@ Purpose: fast, low-dimensional algorithm development.
 Observation space:
 
 ```python
-spaces.Box(low=-np.inf, high=np.inf, shape=(N,), dtype=np.float32)
+spaces.Box(low=STATE_LOW, high=STATE_HIGH, shape=(12,), dtype=np.float32)
 ```
 
 Recommended normalized fields:
@@ -59,14 +61,17 @@ Recommended normalized fields:
 - `next_obstacle_width`
 - `next_obstacle_height`
 - `next_obstacle_type_id`
+- `next_obstacle_bottom`
+- `next_obstacle_top`
 - `second_obstacle_distance`
-- `score`
 
-Do not include `crashed` in the observation. Put crash state in `terminated` and `info`.
+Obstacle altitude prevents perceptual aliasing between low birds that require
+ducking and high birds that are safe to ignore. Raw score and `crashed` are not
+policy inputs: score belongs in `info`, while crashes use `terminated`.
 
 ### Vision Mode
 
-Purpose: true pixel-based RL.
+Purpose: pixel-based RL over deterministic simulator renderings.
 
 Observation space:
 
@@ -82,7 +87,8 @@ Recommended defaults:
 - frame stack 4
 - deterministic preprocessing in a wrapper
 
-The environment must capture real frames using `page.screenshot()` or canvas extraction, not structured JS state reshaped into images.
+Frames are rendered from simulator geometry. They are real image observations,
+not structured state reshaped into an image tensor.
 
 ### Hybrid Mode
 
@@ -93,7 +99,7 @@ Observation space:
 ```python
 spaces.Dict({
     "image": spaces.Box(low=0, high=255, shape=(4, 84, 84), dtype=np.uint8),
-    "state": spaces.Box(low=-np.inf, high=np.inf, shape=(N,), dtype=np.float32),
+    "state": spaces.Box(low=STATE_LOW, high=STATE_HIGH, shape=(12,), dtype=np.float32),
 })
 ```
 
@@ -119,11 +125,11 @@ Only acceptable for early cactus-only tests. It is not enough for full Dino beca
 3 RELEASE
 ```
 
-Implementation:
+Simulator implementation:
 
-- `JUMP_PRESS`: key down/up or press Space/ArrowUp depending on desired jump duration model.
-- `DUCK_PRESS`: key down ArrowDown.
-- `RELEASE`: key up Space/ArrowUp/ArrowDown.
+- `JUMP_PRESS`: starts a jump when grounded.
+- `DUCK_PRESS`: enters ducking while grounded.
+- `RELEASE`: exits ducking.
 
 ### Factored Future Option
 
@@ -167,14 +173,11 @@ Each step should include:
 - `action_mode`
 - `seed`
 
-## Browser Backend Requirements
+## Version Identity
 
-- Default to local controlled HTML/JS game for deterministic benchmarks.
-- Use `chrome://dino` only as an optional experimental backend.
-- Inject or expose seedable RNG in local game JS.
-- Avoid unbounded `time.sleep()` as the timing mechanism; use fixed step advancement when possible.
-- Explicitly fail after reset retries rather than silently returning default observations.
-- `close()` must be idempotent and close Playwright context/browser/process.
+V2 artifacts record the environment, simulator, observation, action, and reward
+schema versions from `flashrl.schemas`. Checkpoints from incompatible schemas
+must fail before inference.
 
 ## Testing Requirements
 
@@ -183,6 +186,7 @@ Each step should include:
 - Step returns observation inside observation space.
 - `terminated` is true on crash.
 - `truncated` is true on max steps.
-- `seed` produces repeatable obstacle sequences in local backend.
-- Browser crash maps to `truncated=True` with `info["error"]`.
-
+- A seed and complete action sequence produce the same full trajectory.
+- Long successful trajectories remain inside every declared observation space.
+- Low and high birds produce distinct state observations.
+- Simulator exceptions propagate and abort training.
