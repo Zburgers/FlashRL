@@ -4,6 +4,9 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+build/
+dist/
+*.egg-info/
 logs/
 runs/
 session_logs/
@@ -11,3 +14,9 @@ data/debug_frames/
 data/eval_frames/
 data/*.log
 data/models/*.pth
+*.pt
+*.pth
+results/*.csv
+results/*.jsonl
+reports/demo/*.gif
+reports/demo/*.mp4

@@ -1,0 +1,76 @@
+name: FlashRL CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install core and test runner
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+          python -m pip install pytest "tomli>=2; python_version < '3.11'"
+      - name: Test supported surface
+        run: python -m pytest -q
+      - name: Run simulator smoke
+        if: matrix.python-version == '3.13'
+        run: python scripts/smoke_test.py
+
+  quality:
+    name: Quality and repository hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install development tools
+        run: python -m pip install ruff
+      - name: Lint
+        run: python -m ruff check flashrl scripts tests
+      - name: Format
+        run: python -m ruff format --check flashrl scripts tests
+      - name: Check diff whitespace
+        run: git diff --check
+
+  wheel:
+    name: Build and qualify wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install build tools
+        run: python -m pip install build twine
+      - name: Build distributions
+        run: python -m build
+      - name: Validate metadata
+        run: python -m twine check dist/*
+      - name: Verify installed wheel outside checkout
+        run: python scripts/verify_wheel.py dist/*.whl

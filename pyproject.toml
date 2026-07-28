@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flashrl"
+dynamic = ["version"]
+description = "A reproducible reinforcement-learning benchmark for a deterministic Dino simulator"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{name = "FlashRL contributors"}]
+keywords = ["reinforcement-learning", "dqn", "gymnasium", "pytorch", "benchmark"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "numpy>=1.24",
+  "gymnasium>=0.29,<1.1",
+  "torch>=2.1",
+  "pillow>=10",
+]
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2",
+  "pytest>=8",
+  "ruff>=0.6",
+  "tomli>=2; python_version < '3.11'",
+  "twine>=5",
+]
+browser = ["playwright>=1.43"]
+ppo = ["stable-baselines3>=2.3"]
+
+[project.scripts]
+flashrl = "flashrl.cli:main"
+
+[project.urls]
+Repository = "https://github.com/Zburgers/FlashRL"
+Issues = "https://github.com/Zburgers/FlashRL/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "flashrl.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["flashrl*"]
+
+[tool.setuptools.package-data]
+"flashrl.demo.static" = ["*.html", "*.js", "*.css"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p no:asyncio"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

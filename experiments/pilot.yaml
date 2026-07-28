@@ -1,0 +1,86 @@
+{
+  "name": "v2-pilot",
+  "output_dir": "runs/v2-pilot",
+  "seeds": [11, 29, 47],
+  "evaluation": {
+    "episodes": 30,
+    "seed_base": 100000
+  },
+  "base": {
+    "episodes": 250,
+    "max_episode_steps": 750,
+    "obs_mode": "state",
+    "action_mode": "full",
+    "backend": "sim",
+    "gamma": 0.99,
+    "learning_rate": 0.0003,
+    "batch_size": 64,
+    "replay_size": 50000,
+    "warmup_steps": 500,
+    "target_update_steps": 500,
+    "train_every": 4,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.05,
+    "epsilon_decay_steps": 15000,
+    "selection_interval_episodes": 25,
+    "selection_episodes": 10,
+    "selection_seed": 50000,
+    "device": "auto"
+  },
+  "variants": [
+    {
+      "name": "vanilla",
+      "overrides": {
+        "double_dqn": false,
+        "dueling": false,
+        "prioritized_replay": false,
+        "n_step": 1
+      }
+    },
+    {
+      "name": "double",
+      "overrides": {
+        "double_dqn": true,
+        "dueling": false,
+        "prioritized_replay": false,
+        "n_step": 1
+      }
+    },
+    {
+      "name": "dueling-double",
+      "overrides": {
+        "double_dqn": true,
+        "dueling": true,
+        "prioritized_replay": false,
+        "n_step": 1
+      }
+    },
+    {
+      "name": "per",
+      "overrides": {
+        "double_dqn": true,
+        "dueling": true,
+        "prioritized_replay": true,
+        "n_step": 1
+      }
+    },
+    {
+      "name": "n3",
+      "overrides": {
+        "double_dqn": true,
+        "dueling": true,
+        "prioritized_replay": false,
+        "n_step": 3
+      }
+    },
+    {
+      "name": "per-n3",
+      "overrides": {
+        "double_dqn": true,
+        "dueling": true,
+        "prioritized_replay": true,
+        "n_step": 3
+      }
+    }
+  ]
+}

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections import deque
 import random
+from collections import deque
 from typing import Any, NamedTuple
 
 import numpy as np
@@ -14,7 +14,9 @@ class Transition(NamedTuple):
     action: int
     reward: float
     next_obs: Any
-    done: bool
+    terminated: bool
+    truncated: bool
+    discount: float
 
 
 class ReplayBuffer:
@@ -58,6 +60,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         self.beta_frames = beta_frames
         self.frame = 1
         self.priorities = np.zeros(capacity, dtype=np.float32)
+        self.np_rng = np.random.default_rng(seed)
 
     def push(self, transition: Transition) -> None:
         max_priority = float(self.priorities.max()) if self.buffer else 1.0
@@ -69,7 +72,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         priorities = self.priorities[: len(self.buffer)]
         probs = priorities**self.alpha
         probs = probs / probs.sum()
-        indices = np.random.choice(len(self.buffer), batch_size, p=probs, replace=False)
+        indices = self.np_rng.choice(len(self.buffer), batch_size, p=probs, replace=False)
         beta = min(1.0, self.beta_start + self.frame * (1.0 - self.beta_start) / self.beta_frames)
         self.frame += 1
         weights = (len(self.buffer) * probs[indices]) ** (-beta)
@@ -89,7 +92,8 @@ class NStepBuffer:
 
     def append(self, transition: Transition) -> Transition | None:
         self.buffer.append(transition)
-        if len(self.buffer) < self.n and not transition.done:
+        episode_done = transition.terminated or transition.truncated
+        if len(self.buffer) < self.n and not episode_done:
             return None
         return self.pop()
 
@@ -98,15 +102,27 @@ class NStepBuffer:
             return None
         reward = 0.0
         next_obs = self.buffer[-1].next_obs
-        done = self.buffer[-1].done
+        terminated = self.buffer[-1].terminated
+        truncated = self.buffer[-1].truncated
+        steps = 0
         for idx, item in enumerate(self.buffer):
             reward += (self.gamma**idx) * item.reward
             next_obs = item.next_obs
-            done = item.done
-            if item.done:
+            terminated = item.terminated
+            truncated = item.truncated
+            steps += 1
+            if terminated or truncated:
                 break
         first = self.buffer.popleft()
-        return Transition(first.obs, first.action, reward, next_obs, done)
+        return Transition(
+            first.obs,
+            first.action,
+            reward,
+            next_obs,
+            terminated,
+            truncated,
+            self.gamma**steps,
+        )
 
     def flush(self) -> list[Transition]:
         out: list[Transition] = []

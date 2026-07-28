@@ -1,189 +1,183 @@
 # FlashRL
 
-FlashRL is a reproducible reinforcement-learning pipeline for a Dino-style browser game benchmark. The project now separates environment observations from model architecture:
+[![FlashRL CI](https://github.com/Zburgers/FlashRL/actions/workflows/ci.yml/badge.svg)](https://github.com/Zburgers/FlashRL/actions/workflows/ci.yml)
+[![Python 3.10-3.13](https://img.shields.io/badge/python-3.10--3.13-3776ab)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-f1c40f)](LICENSE)
 
-- `state`: normalized structured game state, trained with an MLP DQN.
-- `vision`: real rendered pixel frames, trained with a CNN DQN.
-- `hybrid`: image frames plus structured state, trained with a two-encoder DQN.
+FlashRL is a compact reinforcement-learning research benchmark built around a
+deterministic Dino runner. It combines correct DQN semantics, exact frame-budget
+experiments, held-out multi-seed evaluation, traceable artifacts, and a live
+policy laboratory that exposes what the learned network is doing.
 
-The default backend is a deterministic simulator (`--backend sim`) so training, evaluation, and tests run without a browser. Browser-backed play is available as an experimental path (`--backend browser` or `--backend chrome`) after installing Playwright browsers.
+FlashRL V2 is deliberately simulator-only. That makes every trajectory
+reproducible in CI and keeps the research claims honest.
 
-## Setup
+![A learned FlashRL policy replay](reports/demo/median.gif)
+
+## Result
+
+The selected Dueling Double DQN with three-step returns was trained for exactly
+120,000 frames on each of five independent seeds. Every policy was evaluated
+greedily on the same 100 unseen episode seeds.
+
+| Policy | Train runs | Eval episodes | Mean score | 95% CI across train seeds |
+| --- | ---: | ---: | ---: | ---: |
+| **Learned DQN** | **5** | **500** | **301.90** | **[270.61, 335.98]** |
+| Rule controller | 1 | 100 | 284.17 | deterministic policy |
+| Random | 1 | 100 | 126.18 | fixed action RNG |
+
+The learned aggregate is 139.3% above random. Its point estimate is 6.2% above
+the rule controller, but rule performance lies inside the learned
+training-seed interval, so FlashRL does not claim a reliable advantage over the
+hand-engineered controller.
+
+[Read the benchmark report](reports/v2_benchmark_report.md) ·
+[inspect per-run data](reports/v2_benchmark_runs.csv) ·
+[review the ablation study](reports/v2_pilot_report.md) ·
+[compare DQN components](reports/v2_component_report.md)
+
+![Frame-aligned learning curves](reports/figures/learning_curves.svg)
+
+## Quick start
 
 ```bash
+git clone https://github.com/Zburgers/FlashRL.git
+cd FlashRL
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
-python -m playwright install chromium
-```
-
-For simulator-only training and tests, the Playwright browser install is optional.
-
-## Verify The Repo
-
-```bash
+pip install -e ".[dev]"
 python scripts/smoke_test.py
 pytest -q
 ```
 
-Run a tiny training smoke:
+Launch the live laboratory immediately with the built-in rule policy:
 
 ```bash
-python scripts/smoke_test.py --train-smoke
+flashrl demo
 ```
 
-## Evaluate Baselines
-
-Random baseline:
+For the learned-policy experience, download the representative V2 release
+checkpoint and launch it:
 
 ```bash
-python -m flashrl.benchmark.evaluate \
-  --agent random \
-  --episodes 20 \
-  --seed 0 \
-  --eval-seed 1000 \
-  --out results/random_state.csv
+curl -L \
+  https://github.com/Zburgers/FlashRL/releases/download/v2.0.0/flashrl-v2-demo-best.pt \
+  -o best.pt
+flashrl demo --policy dqn --checkpoint best.pt --seed 200058
 ```
 
-Rule-based baseline:
+The local interface animates the real simulator state and displays score,
+reward, action, speed, survival time, all Q-values, selected action, training
+run identity, checkpoint role, and frame count. It also supports pause, playback
+speed, and deterministic seed resets.
+
+Record a portable replay without opening a browser:
 
 ```bash
-python -m flashrl.benchmark.evaluate \
-  --agent rule \
-  --episodes 20 \
-  --seed 0 \
-  --eval-seed 1000 \
-  --out results/rule_state.csv
+flashrl demo \
+  --policy dqn \
+  --checkpoint best.pt \
+  --seed 200058 \
+  --record reports/demo/reproduction.gif
 ```
 
-Each evaluation writes CSV and JSONL rows with score, survival time, steps, death type, seed, observation mode, action mode, backend, checkpoint path, and commit hash.
+## Reproduce the research
 
-## Train DQN
-
-State-mode Double Dueling DQN:
+Inspect the six-component pilot matrix:
 
 ```bash
-python -m flashrl.benchmark.train \
-  --algorithm dqn \
-  --obs-mode state \
-  --action-mode full \
-  --backend sim \
-  --episodes 200 \
-  --max-episode-steps 1000 \
-  --seed 0 \
-  --output-dir runs
+flashrl experiment experiments/pilot.yaml --dry-run
 ```
 
-Add prioritized replay and 3-step returns:
+Run or safely continue the final benchmark:
 
 ```bash
-python -m flashrl.benchmark.train \
-  --obs-mode state \
-  --prioritized-replay \
+flashrl experiment experiments/v2_benchmark.yaml --resume
+```
+
+Regenerate the Markdown report, publication CSVs, and dependency-free SVG
+figures from finalized run manifests:
+
+```bash
+flashrl analyze runs/v2-benchmark \
+  --out reports/v2_benchmark_report.md \
+  --publish-data reports
+```
+
+Each learned job writes:
+
+```text
+runs/v2-benchmark/<run-id>/
+├── manifest.json
+├── config.json
+├── train_metrics.csv
+├── eval_results.csv
+├── eval_results.jsonl
+├── best.pt
+└── last.pt
+```
+
+`best.pt` is selected on a fixed seed set separate from final evaluation.
+`last.pt` retains optimizer and RNG state for continuation. Writes are atomic,
+and checkpoint loading rejects incompatible environment or schema versions.
+
+## Experiment with DQN
+
+Train a small custom run:
+
+```bash
+flashrl train \
+  --episodes 10000 \
+  --total-train-frames 30000 \
+  --seed 7 \
+  --learning-rate 0.0005 \
   --n-step 3 \
-  --episodes 200 \
-  --max-episode-steps 1000 \
   --output-dir runs
 ```
 
-Vision mode:
+Evaluate its selected checkpoint:
 
 ```bash
-python -m flashrl.benchmark.train \
-  --obs-mode vision \
-  --episodes 200 \
-  --max-episode-steps 1000 \
-  --output-dir runs
-```
-
-Hybrid mode:
-
-```bash
-python -m flashrl.benchmark.train \
-  --obs-mode hybrid \
-  --episodes 200 \
-  --max-episode-steps 1000 \
-  --output-dir runs
-```
-
-The trainer stores `config.json`, `train_metrics.csv`, and `checkpoint.pt` in `runs/<run_id>/`.
-
-## Evaluate A DQN Checkpoint
-
-```bash
-python -m flashrl.benchmark.evaluate \
+flashrl evaluate \
   --agent dqn \
-  --checkpoint runs/<run_id>/checkpoint.pt \
+  --checkpoint runs/<run-id>/best.pt \
   --episodes 100 \
-  --seed 0 \
-  --eval-seed 10000 \
-  --obs-mode state \
-  --action-mode full \
-  --backend sim \
-  --out results/dqn_state.csv
+  --eval-seed 300000 \
+  --out results/evaluation.csv
 ```
 
-Use the same `obs-mode`, `action-mode`, and backend used during training.
+The implementation keeps vanilla DQN, Double Q-learning, dueling heads,
+prioritized replay, and N-step returns independently selectable. The pilot
+found three-step targets to be the robust gain; prioritized replay did not
+survive the equal-budget follow-up.
 
-## PPO Comparison
+A fresh five-seed component benchmark replicated that result at an equal
+30,000-frame budget: recommended N3 scored 289.67, Dueling Double 255.79,
+vanilla 238.68, and Double DQN 199.37, with 100 held-out episodes per trained
+policy.
 
-PPO is available for state observations through Stable-Baselines3:
+## Supported surface
 
-```bash
-python -m flashrl.benchmark.train_ppo \
-  --timesteps 100000 \
-  --seed 0 \
-  --output-dir runs/ppo_seed_0
-```
+- Gymnasium environment ID `FlashRL-DinoSim-v2`
+- state, vision, and hybrid simulator observations
+- minimal and full discrete action schemas
+- MLP, CNN, and hybrid Q-networks
+- vanilla, Double, Dueling Double, PER, and N-step DQN components
+- terminal-safe and time-limit-safe TD targets
+- deterministic uniform and prioritized replay sampling
+- exact frame budgets and resumable experiment matrices
+- versioned manifests, checkpoints, and per-episode results
+- two-level run-first aggregation with bootstrap intervals
+- local live demo and deterministic GIF recording
+- Python 3.10 through 3.13 CI and installed-wheel qualification
 
-Evaluate PPO with a custom wrapper is still a follow-up; the saved SB3 model is intended as the PPO training artifact for comparison work.
+PPO and real-browser transfer are research directions, not V2 features.
 
-## Aggregate Results
+## More
 
-```bash
-python -m flashrl.benchmark.aggregate 'results/*.csv' --out reports/benchmark_summary.md
-```
-
-## Compatibility Entrypoints
-
-These top-level scripts call the package CLIs:
-
-```bash
-python dqn_train.py --episodes 50
-python dqn_eval.py --agent rule --episodes 20
-```
-
-## Current Implementation
-
-Implemented:
-
-- Gymnasium-compatible `DinoEnv`.
-- Deterministic simulator backend for reproducible local training.
-- Optional browser/chrome backend hooks through Playwright.
-- State, vision, and hybrid observation modes.
-- Minimal and full action modes.
-- Random and rule-based baselines.
-- Benchmark CSV/JSONL output.
-- DQN, Double DQN, dueling heads, prioritized replay, and N-step returns.
-- PPO state-mode training entrypoint.
-- Benchmark aggregation to markdown.
-- Smoke tests and environment contract tests.
-
-Not claimed:
-
-- No headline score is claimed until result files are produced from a full benchmark run.
-- Historical checkpoints under `data/models/` are not treated as validated benchmark results because they do not contain enough metadata.
-
-## Recommended Full Benchmark
-
-Run at least five seeds before writing a result table:
-
-```bash
-for seed in 0 1 2 3 4; do
-  python -m flashrl.benchmark.evaluate --agent random --episodes 100 --seed "$seed" --eval-seed "$((10000 + seed * 1000))" --out "results/random_seed_${seed}.csv"
-  python -m flashrl.benchmark.evaluate --agent rule --episodes 100 --seed "$seed" --eval-seed "$((10000 + seed * 1000))" --out "results/rule_seed_${seed}.csv"
-  python -m flashrl.benchmark.train --episodes 500 --max-episode-steps 1000 --seed "$seed" --output-dir runs
-done
-```
-
-Then evaluate each DQN checkpoint with held-out eval seeds and compare against random and rule-based baselines.
+- [Technical research report](REPORT.md)
+- [Benchmark protocol](docs/benchmark_protocol.md)
+- [Environment API](docs/environment_api.md)
+- [Experiment configuration guide](experiments/README.md)
+- [Contributing](CONTRIBUTING.md)
+- [V1 history and invalid-artifact rationale](docs/history/v1.md)
