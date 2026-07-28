@@ -63,6 +63,9 @@ def test_training_finalizes_manifest_with_artifact_hashes(tmp_path):
     assert manifest["status"] == "completed"
     assert manifest["train_frames"] == 2
     assert manifest["algorithm_id"] == "dueling_double_dqn"
-    assert manifest["artifacts"]["checkpoint.pt"]["sha256"] == sha256_file(
-        tmp_path / result["run_id"] / "checkpoint.pt"
+    assert manifest["artifacts"]["best.pt"]["sha256"] == sha256_file(
+        tmp_path / result["run_id"] / "best.pt"
+    )
+    assert manifest["artifacts"]["last.pt"]["sha256"] == sha256_file(
+        tmp_path / result["run_id"] / "last.pt"
     )

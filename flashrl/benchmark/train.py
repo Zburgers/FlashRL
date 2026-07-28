@@ -16,7 +16,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--obs-mode", choices=["state", "vision", "hybrid"], default="state")
     parser.add_argument("--action-mode", choices=["minimal", "full"], default="full")
-    parser.add_argument("--backend", choices=["sim", "browser", "chrome"], default="sim")
+    parser.add_argument("--backend", choices=["sim"], default="sim")
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--warmup-steps", type=int, default=500)
     parser.add_argument("--replay-size", type=int, default=50000)
@@ -28,6 +28,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no-dueling", action="store_false", dest="dueling")
     parser.add_argument("--prioritized-replay", action="store_true")
     parser.add_argument("--n-step", type=int, default=1)
+    parser.add_argument("--selection-interval-episodes", type=int, default=10)
+    parser.add_argument("--selection-episodes", type=int, default=5)
+    parser.add_argument("--selection-seed", type=int, default=50000)
+    parser.add_argument("--resume", default="")
     parser.add_argument("--device", default="auto")
     parser.add_argument("--output-dir", default="runs")
     return parser.parse_args()
@@ -53,10 +57,13 @@ def main() -> None:
         dueling=args.dueling,
         prioritized_replay=args.prioritized_replay,
         n_step=args.n_step,
+        selection_interval_episodes=args.selection_interval_episodes,
+        selection_episodes=args.selection_episodes,
+        selection_seed=args.selection_seed,
         device=args.device,
         output_dir=args.output_dir,
     )
-    result = train_dqn(cfg)
+    result = train_dqn(cfg, resume_path=args.resume or None)
     print(json.dumps(result, indent=2))
 
 
