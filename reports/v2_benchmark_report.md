@@ -44,10 +44,10 @@ Episode scores are averaged within each trained policy before independent traini
 
 | Run | Seed | Mean | Frames | Checkpoint SHA-256 | Manifest SHA-256 / path |
 | --- | ---: | ---: | ---: | --- | --- |
-| v2-benchmark-random-baseline | 0 | 126.18 | 0 | `` | `487db19efb63` / `runs/v2-benchmark/v2-benchmark-random-baseline/manifest.json` |
-| v2-benchmark-recommended-seed11 | 11 | 319.14 | 120000 | `259e36ba64fc` | `7b60b0bb5157` / `runs/v2-benchmark/v2-benchmark-recommended-seed11/manifest.json` |
-| v2-benchmark-recommended-seed29 | 29 | 269.29 | 120000 | `5271c21a593b` | `5b3f9fa1e1e7` / `runs/v2-benchmark/v2-benchmark-recommended-seed29/manifest.json` |
-| v2-benchmark-recommended-seed47 | 47 | 363.82 | 120000 | `ff0d16e843b4` | `9a566942db35` / `runs/v2-benchmark/v2-benchmark-recommended-seed47/manifest.json` |
-| v2-benchmark-recommended-seed71 | 71 | 257.24 | 120000 | `9502618982f5` | `cf072c0eeb93` / `runs/v2-benchmark/v2-benchmark-recommended-seed71/manifest.json` |
-| v2-benchmark-recommended-seed89 | 89 | 300.01 | 120000 | `758f47a4ce58` | `cde5c98588e8` / `runs/v2-benchmark/v2-benchmark-recommended-seed89/manifest.json` |
-| v2-benchmark-rule-baseline | 0 | 284.17 | 0 | `` | `1da6b3182aae` / `runs/v2-benchmark/v2-benchmark-rule-baseline/manifest.json` |
+| v2-benchmark-random-baseline | 0 | 126.18 | 0 | `` | `836b84341a82` / `runs/v2-benchmark/v2-benchmark-random-baseline/manifest.json` |
+| v2-benchmark-recommended-seed11 | 11 | 319.14 | 120000 | `259e36ba64fc` | `93ddad2b2a6f` / `runs/v2-benchmark/v2-benchmark-recommended-seed11/manifest.json` |
+| v2-benchmark-recommended-seed29 | 29 | 269.29 | 120000 | `5271c21a593b` | `76cdd5bde112` / `runs/v2-benchmark/v2-benchmark-recommended-seed29/manifest.json` |
+| v2-benchmark-recommended-seed47 | 47 | 363.82 | 120000 | `ff0d16e843b4` | `ba7b37859329` / `runs/v2-benchmark/v2-benchmark-recommended-seed47/manifest.json` |
+| v2-benchmark-recommended-seed71 | 71 | 257.24 | 120000 | `9502618982f5` | `a2d6cc52f3a4` / `runs/v2-benchmark/v2-benchmark-recommended-seed71/manifest.json` |
+| v2-benchmark-recommended-seed89 | 89 | 300.01 | 120000 | `758f47a4ce58` | `e2c773fbcffd` / `runs/v2-benchmark/v2-benchmark-recommended-seed89/manifest.json` |
+| v2-benchmark-rule-baseline | 0 | 284.17 | 0 | `` | `05c9926e3c52` / `runs/v2-benchmark/v2-benchmark-rule-baseline/manifest.json` |
