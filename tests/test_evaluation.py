@@ -1,6 +1,6 @@
 from flashrl.agents.dqn.train import DQNConfig, train_dqn
-from flashrl.benchmark.evaluate import evaluate_checkpoint
 from flashrl.artifacts import sha256_file
+from flashrl.benchmark.evaluate import evaluate_checkpoint
 
 
 def test_checkpoint_evaluation_propagates_training_identity(tmp_path):
@@ -28,11 +28,8 @@ def test_checkpoint_evaluation_propagates_training_identity(tmp_path):
     assert first["algorithm_id"] == trained["algorithm_id"]
     assert first["train_frames"] == trained["train_frames"]
     assert first["checkpoint_role"] == "best"
-    assert first["checkpoint_sha256"] == sha256_file(
-        tmp_path / trained["run_id"] / "best.pt"
-    )
+    assert first["checkpoint_sha256"] == sha256_file(tmp_path / trained["run_id"] / "best.pt")
     assert first["episode_seed"] == 8_000
     assert second["episode_seed"] == 8_001
     assert first["wall_clock_episode_s"] >= 0
     assert "wall_clock_eval_s" not in first
-

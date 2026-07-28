@@ -1,5 +1,3 @@
-import copy
-
 import pytest
 import torch
 
@@ -61,4 +59,3 @@ def test_checkpoint_rejects_observation_schema_mismatch(tmp_path):
     torch.save(old, path)
     with pytest.raises(CheckpointCompatibilityError, match="observation"):
         load_checkpoint(path)
-

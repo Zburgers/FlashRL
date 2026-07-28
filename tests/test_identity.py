@@ -30,4 +30,3 @@ def test_algorithm_id_describes_enabled_components():
     assert algorithm_id(True, False, False, 1) == "double_dqn"
     assert algorithm_id(True, True, False, 1) == "dueling_double_dqn"
     assert algorithm_id(True, True, True, 3) == "dueling_double_dqn_per_n3"
-

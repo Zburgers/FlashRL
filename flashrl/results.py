@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 import statistics
-from typing import Any, Iterable
+from collections import defaultdict
+from collections.abc import Iterable
+from typing import Any
 
 import numpy as np
 
@@ -84,14 +85,11 @@ def validate_compatible_results(rows: Iterable[dict[str, Any]]) -> None:
         )
         if conflicting:
             raise ResultIdentityError(
-                f"Incompatible {field}: expected {expected!r}, "
-                f"found {', '.join(conflicting)}"
+                f"Incompatible {field}: expected {expected!r}, found {', '.join(conflicting)}"
             )
 
 
-def _bootstrap_ci(
-    values: list[float], samples: int, seed: int = 0
-) -> tuple[float, float]:
+def _bootstrap_ci(values: list[float], samples: int, seed: int = 0) -> tuple[float, float]:
     if len(values) == 1:
         return values[0], values[0]
     rng = np.random.default_rng(seed)
@@ -127,17 +125,13 @@ def summarize_results(
                 "episodes": len(scores),
                 "mean_score": float(statistics.fmean(scores)),
                 "median_score": float(statistics.median(scores)),
-                "standard_deviation": (
-                    float(statistics.stdev(scores)) if len(scores) > 1 else 0.0
-                ),
+                "standard_deviation": (float(statistics.stdev(scores)) if len(scores) > 1 else 0.0),
                 "best_score": float(max(scores)),
             }
         )
 
     run_means = [float(row["mean_score"]) for row in run_rows]
-    ci_low, ci_high = _bootstrap_ci(
-        run_means, samples=max(1, bootstrap_samples)
-    )
+    ci_low, ci_high = _bootstrap_ci(run_means, samples=max(1, bootstrap_samples))
     reference = rows[0]
     experiment_rows = [
         {
@@ -156,4 +150,3 @@ def summarize_results(
         }
     ]
     return run_rows, experiment_rows
-

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections import deque
 import random
+from collections import deque
 from typing import Any, NamedTuple
 
 import numpy as np
@@ -72,9 +72,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         priorities = self.priorities[: len(self.buffer)]
         probs = priorities**self.alpha
         probs = probs / probs.sum()
-        indices = self.np_rng.choice(
-            len(self.buffer), batch_size, p=probs, replace=False
-        )
+        indices = self.np_rng.choice(len(self.buffer), batch_size, p=probs, replace=False)
         beta = min(1.0, self.beta_start + self.frame * (1.0 - self.beta_start) / self.beta_frames)
         self.frame += 1
         weights = (len(self.buffer) * probs[indices]) ** (-beta)

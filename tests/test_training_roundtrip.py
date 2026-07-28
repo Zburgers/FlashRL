@@ -40,17 +40,13 @@ def test_training_writes_distinct_best_and_last_checkpoints(tmp_path):
 def test_resume_continues_episode_and_frame_counts(tmp_path):
     first = train_dqn(tiny_config(tmp_path, episodes=1, run_id="resumable"))
     first_frames = first["train_frames"]
-    first_manifest = json.loads(
-        (tmp_path / "resumable" / "manifest.json").read_text()
-    )
+    first_manifest = json.loads((tmp_path / "resumable" / "manifest.json").read_text())
     resumed = train_dqn(
         tiny_config(tmp_path, episodes=2, run_id="resumable"),
         resume_path=first["last_checkpoint_path"],
     )
     assert resumed["train_frames"] > first_frames
-    resumed_manifest = json.loads(
-        (tmp_path / "resumable" / "manifest.json").read_text()
-    )
+    resumed_manifest = json.loads((tmp_path / "resumable" / "manifest.json").read_text())
     assert resumed_manifest["experiment_id"] == first_manifest["experiment_id"]
     with open(
         tmp_path / "resumable" / "train_metrics.csv",

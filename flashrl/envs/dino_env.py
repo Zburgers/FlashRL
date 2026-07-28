@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 import gymnasium as gym
-from gymnasium import spaces
 import numpy as np
+from gymnasium import spaces
 from PIL import Image, ImageDraw
 
 ObsMode = Literal["state", "vision", "hybrid"]
@@ -80,9 +80,7 @@ class DinoEnv(gym.Env):
         if action_mode not in {"minimal", "full"}:
             raise ValueError(f"Unsupported action_mode: {action_mode}")
         if backend != "sim":
-            raise ValueError(
-                f"Unsupported V2 backend: {backend}. FlashRL V2 is simulator-only."
-            )
+            raise ValueError(f"Unsupported V2 backend: {backend}. FlashRL V2 is simulator-only.")
 
         self.obs_mode = obs_mode
         self.action_mode = action_mode

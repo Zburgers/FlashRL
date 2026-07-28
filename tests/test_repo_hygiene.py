@@ -1,6 +1,5 @@
-from pathlib import Path
 import subprocess
-
+from pathlib import Path
 
 LEGACY_ROOT_FILES = {
     "config.py",

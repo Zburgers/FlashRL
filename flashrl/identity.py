@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 
 def canonical_json(value: Any) -> str:
@@ -42,4 +43,3 @@ def algorithm_id(
     if n_step > 1:
         parts.append(f"n{n_step}")
     return "_".join(parts)
-

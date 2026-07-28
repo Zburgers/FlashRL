@@ -11,4 +11,3 @@ NOOP = 0
 JUMP = 1
 DUCK = 2
 RELEASE = 3
-

@@ -58,4 +58,3 @@ def test_prioritized_replay_sampling_is_seeded():
     _, first_indices, _ = first.sample(4)
     _, second_indices, _ = second.sample(4)
     assert np.array_equal(first_indices, second_indices)
-

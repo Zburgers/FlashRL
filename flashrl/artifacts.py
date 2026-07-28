@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
 import hashlib
 import json
 import os
-from pathlib import Path
 import tempfile
-from typing import Any, Mapping
+from collections.abc import Mapping
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+from typing import Any
 
 from flashrl.schemas import (
     ACTION_SCHEMA_VERSION,
@@ -81,6 +82,5 @@ class RunManifest:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, value: Mapping[str, Any]) -> "RunManifest":
+    def from_dict(cls, value: Mapping[str, Any]) -> RunManifest:
         return cls(**dict(value))
-

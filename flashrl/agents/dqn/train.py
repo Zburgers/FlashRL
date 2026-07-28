@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
 import csv
 import os
-from pathlib import Path
 import random
 import subprocess
 import tempfile
 import time
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -18,10 +18,9 @@ import torch
 import torch.nn.functional as F
 from torch import optim
 
-from flashrl.artifacts import RunManifest, atomic_write_json, sha256_file
 from flashrl.agents.dqn.networks import build_q_network
 from flashrl.agents.dqn.replay import NStepBuffer, PrioritizedReplayBuffer, ReplayBuffer, Transition
-from flashrl.benchmark.evaluate import evaluate_policy
+from flashrl.artifacts import RunManifest, atomic_write_json, sha256_file
 from flashrl.envs import DinoEnv
 from flashrl.identity import algorithm_id, hyperparameter_hash
 from flashrl.schemas import (
@@ -77,11 +76,7 @@ def git_commit() -> str:
 
 def git_dirty() -> bool:
     try:
-        return bool(
-            subprocess.check_output(
-                ["git", "status", "--porcelain"], text=True
-            ).strip()
-        )
+        return bool(subprocess.check_output(["git", "status", "--porcelain"], text=True).strip())
     except Exception:
         return False
 
@@ -159,9 +154,7 @@ def atomic_torch_save(path: Path, payload: dict[str, Any]) -> None:
             temporary_path.unlink()
 
 
-def load_checkpoint(
-    path: str | Path, map_location: str | torch.device = "cpu"
-) -> dict[str, Any]:
+def load_checkpoint(path: str | Path, map_location: str | torch.device = "cpu") -> dict[str, Any]:
     checkpoint = torch.load(path, map_location=map_location, weights_only=False)
     expected = {
         "checkpoint_format_version": CHECKPOINT_FORMAT_VERSION,
@@ -175,8 +168,7 @@ def load_checkpoint(
         if actual != expected_value:
             name = field.replace("_schema_version", "").replace("_version", "")
             raise CheckpointCompatibilityError(
-                f"Incompatible checkpoint {name}: expected {expected_value}, "
-                f"found {actual!r}"
+                f"Incompatible checkpoint {name}: expected {expected_value}, found {actual!r}"
             )
     return checkpoint
 
@@ -286,14 +278,12 @@ def optimize(
     transitions, indices, weights = replay.sample(cfg.batch_size)
     obs = batch_obs([t.obs for t in transitions], device)
     next_obs = batch_obs([t.next_obs for t in transitions], device)
-    actions = torch.tensor([t.action for t in transitions], device=device, dtype=torch.long).unsqueeze(1)
+    actions = torch.tensor(
+        [t.action for t in transitions], device=device, dtype=torch.long
+    ).unsqueeze(1)
     rewards = torch.tensor([t.reward for t in transitions], device=device, dtype=torch.float32)
-    terminated = torch.tensor(
-        [t.terminated for t in transitions], device=device, dtype=torch.bool
-    )
-    discounts = torch.tensor(
-        [t.discount for t in transitions], device=device, dtype=torch.float32
-    )
+    terminated = torch.tensor([t.terminated for t in transitions], device=device, dtype=torch.bool)
+    discounts = torch.tensor([t.discount for t in transitions], device=device, dtype=torch.float32)
     weights_t = torch.tensor(weights, device=device, dtype=torch.float32)
 
     q = policy_net(obs).gather(1, actions).squeeze(1)
@@ -314,9 +304,7 @@ def optimize(
     return float(loss.item())
 
 
-def train_dqn(
-    cfg: DQNConfig, resume_path: str | Path | None = None
-) -> dict[str, Any]:
+def train_dqn(cfg: DQNConfig, resume_path: str | Path | None = None) -> dict[str, Any]:
     set_seed(cfg.seed)
     run_id = cfg.run_id or datetime.now(timezone.utc).strftime("dqn_%Y%m%dT%H%M%SZ")
     run_dir = Path(cfg.output_dir) / run_id
@@ -367,8 +355,12 @@ def train_dqn(
         seed=cfg.seed,
     )
     env.action_space.seed(cfg.seed)
-    policy_net = build_q_network(env.observation_space, env.action_space.n, cfg.obs_mode, cfg.dueling).to(device)
-    target_net = build_q_network(env.observation_space, env.action_space.n, cfg.obs_mode, cfg.dueling).to(device)
+    policy_net = build_q_network(
+        env.observation_space, env.action_space.n, cfg.obs_mode, cfg.dueling
+    ).to(device)
+    target_net = build_q_network(
+        env.observation_space, env.action_space.n, cfg.obs_mode, cfg.dueling
+    ).to(device)
     target_net.load_state_dict(policy_net.state_dict())
     optimizer = optim.Adam(policy_net.parameters(), lr=cfg.learning_rate)
     replay = (
@@ -389,8 +381,7 @@ def train_dqn(
         incompatible = [
             field
             for field in asdict(cfg)
-            if field not in ignored_fields
-            and getattr(cfg, field) != getattr(previous_cfg, field)
+            if field not in ignored_fields and getattr(cfg, field) != getattr(previous_cfg, field)
         ]
         if incompatible:
             raise CheckpointCompatibilityError(
@@ -403,19 +394,13 @@ def train_dqn(
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         total_steps = int(checkpoint["train_frames"])
         start_episode = int(checkpoint["episode"]) + 1
-        best_training_score = float(
-            checkpoint.get("best_training_score", -float("inf"))
-        )
-        best_selection_score = float(
-            checkpoint.get("selection_score", -float("inf"))
-        )
+        best_training_score = float(checkpoint.get("best_training_score", -float("inf")))
+        best_selection_score = float(checkpoint.get("selection_score", -float("inf")))
         random.setstate(checkpoint["python_random_state"])
         np.random.set_state(checkpoint["numpy_random_state"])
         torch.set_rng_state(checkpoint["torch_random_state"])
 
-    best_tracker = BestCheckpointTracker(
-        best_checkpoint_path, best_score=best_selection_score
-    )
+    best_tracker = BestCheckpointTracker(best_checkpoint_path, best_score=best_selection_score)
     started = time.time()
     metrics_mode = "a" if resume_path is not None else "w"
     with metrics_path.open(metrics_mode, newline="", encoding="utf-8") as fh:
@@ -479,19 +464,16 @@ def train_dqn(
                 "terminated": terminated,
                 "truncated": truncated,
                 "ending_reason": (
-                    info.get("death_type", "terminated")
-                    if terminated
-                    else "time_limit"
+                    info.get("death_type", "terminated") if terminated else "time_limit"
                 ),
                 "wall_clock_s": time.time() - started,
             }
             writer.writerow(row)
             fh.flush()
             best_training_score = max(best_training_score, float(row["score"]))
-            should_select = (
-                (episode + 1) % max(1, cfg.selection_interval_episodes) == 0
-                or episode + 1 == cfg.episodes
-            )
+            should_select = (episode + 1) % max(
+                1, cfg.selection_interval_episodes
+            ) == 0 or episode + 1 == cfg.episodes
             if should_select:
                 candidate_score = _selection_score(policy_net, cfg, device)
                 candidate = _checkpoint_payload(
@@ -555,7 +537,11 @@ def train_dqn(
 class DQNPolicy:
     def __init__(self, checkpoint_path: str, device: str = "auto") -> None:
         self.checkpoint_path = checkpoint_path
-        self.device = torch.device("cuda" if device == "auto" and torch.cuda.is_available() else ("cpu" if device == "auto" else device))
+        self.device = torch.device(
+            "cuda"
+            if device == "auto" and torch.cuda.is_available()
+            else ("cpu" if device == "auto" else device)
+        )
         self.model = None
         self.cfg = None
 

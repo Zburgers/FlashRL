@@ -7,8 +7,9 @@ def test_network_matches_observation_modes():
         env = DinoEnv(obs_mode=obs_mode, backend="sim", seed=0)
         model = build_q_network(env.observation_space, env.action_space.n, obs_mode, dueling=True)
         obs, _ = env.reset(seed=0)
-        from flashrl.agents.dqn.train import obs_to_torch
         import torch
+
+        from flashrl.agents.dqn.train import obs_to_torch
 
         with torch.no_grad():
             q_values = model(obs_to_torch(obs, torch.device("cpu")))
