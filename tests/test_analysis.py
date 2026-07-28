@@ -90,12 +90,36 @@ def test_report_is_traceable_to_manifests_and_publishes_data(tmp_path):
         + "\n",
         encoding="utf-8",
     )
+    baseline_dir = run_root / "pilot-random-baseline"
+    baseline_dir.mkdir()
+    baseline_manifest = manifest | {
+        "run_id": "pilot-random-baseline",
+        "experiment_id": "random-baseline",
+        "algorithm_id": "random",
+        "hyperparameter_hash": "",
+        "train_frames": 0,
+        "wall_clock_train_s": 0,
+        "artifacts": {},
+    }
+    (baseline_dir / "manifest.json").write_text(json.dumps(baseline_manifest), encoding="utf-8")
+    (baseline_dir / "eval_results.jsonl").write_text(
+        json.dumps(
+            {
+                "training_run_id": "pilot-random-baseline",
+                "score": 12,
+                "ending_reason": "late_jump",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     out = tmp_path / "reports" / "pilot_report.md"
     published = tmp_path / "reports"
     result = generate_report(run_root, out=out, publish_data=published)
-    assert result["runs"] == 1
+    assert result["runs"] == 2
     report = out.read_text()
     assert "pilot-double-seed0" in report
+    assert "random" in report
     assert "f" * 12 in report
     assert (published / "pilot_runs.csv").is_file()
     assert (published / "pilot_summary.csv").is_file()

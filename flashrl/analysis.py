@@ -113,7 +113,7 @@ def _collect_runs(run_dir: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         child = manifest_path.parent
         eval_path = child / "eval_results.jsonl"
         metrics_path = child / "train_metrics.csv"
-        if not eval_path.is_file() or not metrics_path.is_file():
+        if not eval_path.is_file():
             continue
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         if manifest.get("status") != "completed":
@@ -121,7 +121,10 @@ def _collect_runs(run_dir: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         evaluation = _load_jsonl(eval_path)
         if not evaluation:
             continue
-        curve, training = _training_curve(metrics_path)
+        if metrics_path.is_file():
+            curve, training = _training_curve(metrics_path)
+        else:
+            curve, training = [(0, 0.0)], []
         scores = [float(row["score"]) for row in evaluation]
         checkpoint_hash = manifest.get("artifacts", {}).get("best.pt", {}).get("sha256", "")
         run = {

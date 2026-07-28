@@ -103,3 +103,13 @@ def test_resume_skips_only_jobs_with_complete_evaluation(tmp_path, monkeypatch):
             "reason": "completed",
         }
     ]
+
+
+def test_dry_run_includes_declared_common_seed_baselines():
+    config = configuration()
+    config["baselines"] = ["random", "rule"]
+    records = execute_experiment(config, dry_run=True)
+    assert [(record["agent"], record["status"]) for record in records[-2:]] == [
+        ("random", "planned"),
+        ("rule", "planned"),
+    ]

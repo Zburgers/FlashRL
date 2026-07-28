@@ -6,12 +6,19 @@ import json
 import os
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, fields
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from flashrl.agents.dqn.train import DQNConfig, train_dqn
-from flashrl.artifacts import atomic_write_json, sha256_file
-from flashrl.benchmark.evaluate import evaluate_checkpoint, write_results
+from flashrl.agents.dqn.train import DQNConfig, git_commit, git_dirty, train_dqn
+from flashrl.artifacts import RunManifest, atomic_write_json, sha256_file
+from flashrl.benchmark.evaluate import (
+    evaluate_checkpoint,
+    evaluate_policy,
+    make_agent,
+    write_results,
+)
+from flashrl.envs import DinoEnv
 
 
 class ExperimentConfigurationError(ValueError):
@@ -186,6 +193,100 @@ def _execute_job(job: ExperimentJob, resume: bool) -> dict[str, Any]:
     }
 
 
+def _baseline_names(configuration: dict[str, Any]) -> list[str]:
+    baselines = configuration.get("baselines", [])
+    if not isinstance(baselines, list) or not all(
+        baseline in {"random", "rule"} for baseline in baselines
+    ):
+        raise ExperimentConfigurationError("baselines may contain only random and rule")
+    if len(set(baselines)) != len(baselines):
+        raise ExperimentConfigurationError("Duplicate baseline")
+    return baselines
+
+
+def _execute_baseline(configuration: dict[str, Any], baseline: str, resume: bool) -> dict[str, Any]:
+    run_id = f"{configuration['name']}-{baseline}-baseline"
+    run_dir = Path(str(configuration["output_dir"])) / run_id
+    if resume and _completed_evaluation(run_dir):
+        return {
+            "run_id": run_id,
+            "variant": "baseline",
+            "agent": baseline,
+            "status": "skipped",
+            "reason": "completed",
+        }
+
+    base = _require_mapping(configuration.get("base", {}), "base")
+    evaluation = _require_mapping(configuration.get("evaluation", {}), "evaluation")
+    episodes = int(evaluation.get("episodes", 100))
+    eval_seed = int(evaluation.get("seed_base", 100_000))
+    env = DinoEnv(
+        obs_mode=str(base.get("obs_mode", "state")),
+        action_mode=str(base.get("action_mode", "full")),
+        backend="sim",
+        max_episode_steps=int(base.get("max_episode_steps", 1000)),
+        seed=0,
+    )
+    agent = make_agent(baseline, env, seed=0)
+    started = datetime.now(timezone.utc)
+    try:
+        rows = evaluate_policy(
+            agent,
+            env,
+            episodes=episodes,
+            eval_seed=eval_seed,
+            run_id=f"{run_id}-eval",
+            agent_name=baseline,
+            algorithm=baseline,
+            phase="heldout",
+            identity={
+                "training_run_id": run_id,
+                "experiment_id": f"{baseline}-baseline",
+                "algorithm_id": baseline,
+                "training_seed": 0,
+                "training_git_commit": git_commit(),
+                "train_frames": 0,
+            },
+        )
+    finally:
+        env.close()
+    run_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = run_dir / "eval_results.csv"
+    jsonl_path = run_dir / "eval_results.jsonl"
+    write_results(rows, csv_path, jsonl_path)
+    completed = datetime.now(timezone.utc)
+    manifest = RunManifest(
+        run_id=run_id,
+        experiment_id=f"{baseline}-baseline",
+        algorithm_id=baseline,
+        hyperparameter_hash="",
+        training_seed=0,
+        training_git_commit=git_commit(),
+        git_dirty=git_dirty(),
+        started_at=started.isoformat(),
+        status="completed",
+        completed_at=completed.isoformat(),
+        config={
+            "agent": baseline,
+            "evaluation_episodes": episodes,
+            "evaluation_seed_base": eval_seed,
+        },
+        artifacts={
+            path.name: {"path": path.name, "sha256": sha256_file(path)}
+            for path in (csv_path, jsonl_path)
+        },
+    )
+    atomic_write_json(run_dir / "manifest.json", manifest.to_dict())
+    return {
+        "run_id": run_id,
+        "variant": "baseline",
+        "agent": baseline,
+        "status": "completed",
+        "evaluation_episodes": len(rows),
+        "run_dir": str(run_dir),
+    }
+
+
 def execute_experiment(
     configuration: dict[str, Any],
     *,
@@ -196,11 +297,12 @@ def execute_experiment(
     """Execute or describe a reproducible local experiment matrix."""
 
     jobs = expand_jobs(configuration)
+    baselines = _baseline_names(configuration)
     maximum_workers = max(1, os.cpu_count() or 1)
     if not isinstance(workers, int) or not 1 <= workers <= maximum_workers:
         raise ExperimentConfigurationError(f"workers must be between 1 and {maximum_workers}")
     if dry_run:
-        return [
+        records = [
             {
                 "run_id": job.run_id,
                 "variant": job.variant_name,
@@ -211,7 +313,21 @@ def execute_experiment(
             }
             for job in jobs
         ]
+        records.extend(
+            {
+                "run_id": f"{configuration['name']}-{baseline}-baseline",
+                "variant": "baseline",
+                "agent": baseline,
+                "status": "planned",
+                "evaluation_episodes": jobs[0].evaluation_episodes,
+            }
+            for baseline in baselines
+        )
+        return records
     if workers == 1:
-        return [_execute_job(job, resume) for job in jobs]
-    with ProcessPoolExecutor(max_workers=workers) as executor:
-        return list(executor.map(_execute_job, jobs, [resume] * len(jobs)))
+        records = [_execute_job(job, resume) for job in jobs]
+    else:
+        with ProcessPoolExecutor(max_workers=workers) as executor:
+            records = list(executor.map(_execute_job, jobs, [resume] * len(jobs)))
+    records.extend(_execute_baseline(configuration, baseline, resume) for baseline in baselines)
+    return records

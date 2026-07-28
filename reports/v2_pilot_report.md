@@ -32,17 +32,51 @@ Source directory: `runs/v2-pilot`
 | dueling_double_dqn_per | 3 | 90 | 186.10 | [162.29, 215.14] | 1898458 |
 | dueling_double_dqn_per_n3 | 3 | 90 | 237.21 | [207.04, 265.89] | 2175707 |
 
-## Findings and next experiment
+## Initial findings
 
 PER plus three-step returns led the pilot at 237.21 mean score, 60% above
 random. Three-step returns without PER ranked second at 220.67. PER without
 multi-step returns did not improve over Dueling Double DQN, so the evidence
 suggests that return horizon is the main effect and PER may be an interaction.
 
-The follow-up study fixes every run at 30,000 environment frames. It retests
-PER's interaction, then changes one factor at a time: learning rate, exploration
-duration, and return horizon. A final protocol will be selected from mean
-held-out performance and seed variance, never from one maximum episode.
+## Equal-budget tuning
+
+The follow-up study fixed every run at exactly 30,000 environment frames and
+evaluated 50 held-out episodes per seed.
+
+| Variant | Across-seed mean | Seed SD | Decision |
+| --- | ---: | ---: | --- |
+| Dueling Double N3, no PER | 259.19 | 9.51 | retain |
+| PER N3, `3e-4` | 252.90 | 30.95 | reject PER |
+| PER N3, `1e-4` | 185.20 | 45.25 | reject |
+| PER N3, `5e-4` | 259.23 | 14.56 | refine rate |
+| PER N3, slower exploration | 258.10 | 8.43 | refine schedule |
+| PER N5 | 256.73 | 13.03 | reject longer return |
+
+Removing PER tied the best mean while improving stability and reducing
+complexity. The `1e-4` hypothesis failed substantially. Five-step returns and
+slower exploration offered no evidence of a gain.
+
+## Higher-budget refinement
+
+The final pilot stage removed PER, raised the budget to exactly 60,000 frames,
+and independently transferred the plausible schedule changes. Every result
+again uses three training seeds and 50 common held-out episodes per seed.
+
+| Variant | Across-seed mean | Seed SD |
+| --- | ---: | ---: |
+| N3, `5e-4` | **284.01** | **7.95** |
+| N3, `3e-4` reference | 278.43 | 21.67 |
+| N3, slower exploration | 269.28 | 6.30 |
+| N3, target update every 1,000 frames | 274.92 | 1.24 |
+
+The selected protocol is Dueling Double DQN with three-step returns, uniform
+replay, a `5e-4` learning rate, 500-frame target cadence, and exploration
+decaying over 15,000 frames. It improves the mean and sharply reduces variance
+relative to the reference. The final benchmark raises the sample budget to
+120,000 frames, uses five independent training seeds, evaluates 100 unseen
+episodes per trained policy, and evaluates both baselines on that exact episode
+seed set.
 
 ## Run provenance
 
