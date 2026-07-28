@@ -1,6 +1,9 @@
 from pathlib import Path
 
-import tomllib
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - exercised by the Python 3.10 CI job
+    import tomli as tomllib
 
 from flashrl import __version__
 
@@ -33,6 +36,8 @@ def test_ci_gates_pushes_pull_requests_wheels_and_supported_python():
     assert "verify_wheel.py" in workflow
     assert "pytest" in workflow
     assert "ruff" in workflow
+    assert "actions/checkout@v7" in workflow
+    assert "actions/setup-python@v7" in workflow
 
 
 def test_wheel_verifier_exists_and_uses_isolated_environment():
