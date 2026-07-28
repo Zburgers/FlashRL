@@ -18,10 +18,12 @@ import torch
 import torch.nn.functional as F
 from torch import optim
 
+from flashrl.artifacts import RunManifest, atomic_write_json, sha256_file
 from flashrl.agents.dqn.networks import build_q_network
 from flashrl.agents.dqn.replay import NStepBuffer, PrioritizedReplayBuffer, ReplayBuffer, Transition
 from flashrl.benchmark.evaluate import evaluate_policy
 from flashrl.envs import DinoEnv
+from flashrl.identity import algorithm_id, hyperparameter_hash
 
 
 @dataclass
@@ -56,6 +58,17 @@ def git_commit() -> str:
         return subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
     except Exception:
         return "unknown"
+
+
+def git_dirty() -> bool:
+    try:
+        return bool(
+            subprocess.check_output(
+                ["git", "status", "--porcelain"], text=True
+            ).strip()
+        )
+    except Exception:
+        return False
 
 
 def set_seed(seed: int) -> None:
@@ -157,7 +170,34 @@ def train_dqn(cfg: DQNConfig) -> dict[str, Any]:
     config_path = run_dir / "config.json"
     metrics_path = run_dir / "train_metrics.csv"
     checkpoint_path = run_dir / "checkpoint.pt"
-    config_path.write_text(json.dumps(asdict(cfg) | {"run_id": run_id}, indent=2), encoding="utf-8")
+    manifest_path = run_dir / "manifest.json"
+    config_payload = asdict(cfg) | {"run_id": run_id}
+    atomic_write_json(config_path, config_payload)
+    identity_config = {
+        key: value
+        for key, value in config_payload.items()
+        if key not in {"output_dir", "run_id", "device"}
+    }
+    variant_id = algorithm_id(
+        cfg.double_dqn,
+        cfg.dueling,
+        cfg.prioritized_replay,
+        cfg.n_step,
+    )
+    config_hash = hyperparameter_hash(identity_config)
+    started_at = datetime.now(timezone.utc).isoformat()
+    manifest = RunManifest(
+        run_id=run_id,
+        experiment_id=f"{variant_id}-{config_hash}",
+        algorithm_id=variant_id,
+        hyperparameter_hash=config_hash,
+        training_seed=cfg.seed,
+        training_git_commit=git_commit(),
+        git_dirty=git_dirty(),
+        started_at=started_at,
+        config=config_payload,
+    )
+    atomic_write_json(manifest_path, manifest.to_dict())
 
     if cfg.device == "auto":
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -258,11 +298,22 @@ def train_dqn(cfg: DQNConfig) -> dict[str, Any]:
                 save_checkpoint(checkpoint_path, policy_net, optimizer, cfg, run_id, total_steps, best_score)
     env.close()
     save_checkpoint(checkpoint_path, policy_net, optimizer, cfg, run_id, total_steps, best_score)
+    manifest.status = "completed"
+    manifest.train_frames = total_steps
+    manifest.wall_clock_train_s = time.time() - started
+    manifest.completed_at = datetime.now(timezone.utc).isoformat()
+    manifest.artifacts = {
+        path.name: {"path": path.name, "sha256": sha256_file(path)}
+        for path in (config_path, metrics_path, checkpoint_path)
+    }
+    atomic_write_json(manifest_path, manifest.to_dict())
     return {
         "run_id": run_id,
         "run_dir": str(run_dir),
         "checkpoint_path": str(checkpoint_path),
         "config_path": str(config_path),
+        "manifest_path": str(manifest_path),
+        "algorithm_id": variant_id,
         "train_frames": total_steps,
         "best_score": best_score,
     }
