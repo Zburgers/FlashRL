@@ -1,0 +1,64 @@
+{
+  "name": "v2-components",
+  "output_dir": "runs/v2-components",
+  "seeds": [13, 31, 53, 73, 97],
+  "evaluation": {
+    "episodes": 100,
+    "seed_base": 300000
+  },
+  "base": {
+    "episodes": 10000,
+    "total_train_frames": 30000,
+    "max_episode_steps": 1000,
+    "obs_mode": "state",
+    "action_mode": "full",
+    "backend": "sim",
+    "gamma": 0.99,
+    "learning_rate": 0.0005,
+    "batch_size": 64,
+    "replay_size": 50000,
+    "warmup_steps": 500,
+    "target_update_steps": 500,
+    "train_every": 4,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.05,
+    "epsilon_decay_steps": 15000,
+    "prioritized_replay": false,
+    "n_step": 1,
+    "selection_interval_episodes": 200,
+    "selection_episodes": 20,
+    "selection_seed": 60000,
+    "device": "auto"
+  },
+  "variants": [
+    {
+      "name": "vanilla",
+      "overrides": {
+        "double_dqn": false,
+        "dueling": false
+      }
+    },
+    {
+      "name": "double",
+      "overrides": {
+        "double_dqn": true,
+        "dueling": false
+      }
+    },
+    {
+      "name": "dueling-double",
+      "overrides": {
+        "double_dqn": true,
+        "dueling": true
+      }
+    },
+    {
+      "name": "recommended-n3",
+      "overrides": {
+        "double_dqn": true,
+        "dueling": true,
+        "n_step": 3
+      }
+    }
+  ]
+}
