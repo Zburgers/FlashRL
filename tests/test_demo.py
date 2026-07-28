@@ -4,8 +4,9 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 import pytest
+from PIL import Image
 
-from flashrl.demo.server import DemoSession, create_server
+from flashrl.demo.server import DemoSession, create_server, record_demo
 
 
 @pytest.fixture
@@ -85,3 +86,18 @@ def test_demo_rejects_invalid_or_remote_checkpoint_controls(live_demo, path, pay
     with pytest.raises(HTTPError) as failure:
         post_json(f"{base}{path}", payload)
     assert failure.value.code == 400
+
+
+def test_demo_records_portable_instrument_panel_gif(tmp_path):
+    output = tmp_path / "episode.gif"
+    record_demo(
+        policy_name="rule",
+        checkpoint=None,
+        seed=23,
+        output=output,
+        max_frames=5,
+    )
+    with Image.open(output) as recording:
+        assert recording.format == "GIF"
+        assert recording.size == (960, 540)
+        assert recording.n_frames == 5

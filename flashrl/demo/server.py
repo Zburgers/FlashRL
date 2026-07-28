@@ -12,6 +12,8 @@ from pathlib import Path
 from threading import Event, Lock, Thread
 from typing import Any
 
+from PIL import Image, ImageDraw, ImageFont
+
 from flashrl.agents.baselines import RandomAgent, RuleBasedDinoAgent
 from flashrl.envs import DinoEnv
 from flashrl.schemas import ENVIRONMENT_ID
@@ -299,6 +301,136 @@ class DemoRequestHandler(BaseHTTPRequestHandler):
 
     def log_message(self, format: str, *args: Any) -> None:
         return
+
+
+def _recording_font(size: int, bold: bool = False):
+    name = "DejaVuSansMono-Bold.ttf" if bold else "DejaVuSansMono.ttf"
+    try:
+        return ImageFont.truetype(name, size)
+    except OSError:
+        return ImageFont.load_default()
+
+
+def _recording_frame(snapshot: dict[str, Any]) -> Image.Image:
+    image = Image.new("RGB", (960, 540), "#101216")
+    draw = ImageDraw.Draw(image)
+    accent = "#ff7a45"
+    ink = "#ddd8cc"
+    muted = "#858b91"
+    panel = "#191c21"
+    grid = "#292d33"
+    draw.text(
+        (48, 27),
+        "FLASHRL // LEARNED POLICY REPLAY",
+        font=_recording_font(22, True),
+        fill=ink,
+    )
+    draw.text(
+        (48, 57),
+        f"EP {snapshot['episode']:02d}  SEED {snapshot['seed']}  STEP {snapshot['step']:04d}",
+        font=_recording_font(13),
+        fill=muted,
+    )
+    draw.rectangle((48, 82, 912, 316), fill=panel, outline="#3a3f46", width=2)
+    for x in range(72, 912, 84):
+        draw.line((x, 83, x, 315), fill=grid)
+    for y in range(106, 316, 42):
+        draw.line((49, y, 911, y), fill=grid)
+    ground = 284
+    draw.line((48, ground, 912, ground), fill="#6d7278", width=2)
+    dino = snapshot["dino"]
+    dino_x = 48 + float(dino["x"]) / 600 * 864
+    dino_height = 22 if dino["ducking"] else 36
+    dino_y = ground - dino_height - float(dino["y"]) * 1.25
+    draw.rectangle(
+        (dino_x, dino_y, dino_x + (34 if dino["ducking"] else 24), dino_y + dino_height),
+        fill=accent,
+    )
+    draw.rectangle((dino_x + 15, dino_y - 7, dino_x + 29, dino_y + 7), fill=accent)
+    draw.point((dino_x + 25, dino_y - 3), fill="#101216")
+    for obstacle in snapshot["obstacles"]:
+        x = 48 + float(obstacle["x"]) / 600 * 864
+        width = max(8, float(obstacle["width"]) / 600 * 864)
+        if obstacle["type"] == "cactus":
+            height = max(18, float(obstacle["height"]) * 1.25)
+            draw.rectangle((x, ground - height, x + width, ground), fill="#78b88a")
+        else:
+            y = ground - float(obstacle["y"]) * 1.25 - 35
+            draw.rectangle((x, y, x + width, y + 22), fill="#e5c36a")
+            draw.line((x - 8, y + 11, x + width + 8, y + 11), fill="#e5c36a", width=3)
+    draw.text(
+        (66, 96),
+        str(snapshot["ending_reason"]).upper(),
+        font=_recording_font(12, True),
+        fill=accent if snapshot["terminated"] else muted,
+    )
+
+    cards = [
+        ("SCORE", f"{float(snapshot['score']):07.1f}"),
+        ("ACTION", str(snapshot["action"]["name"])),
+        ("SPEED", f"{float(snapshot['speed']):.2f}x"),
+        ("REWARD", f"{float(snapshot['reward']):+.3f}"),
+    ]
+    for index, (label, value) in enumerate(cards):
+        left = 48 + index * 216
+        draw.rectangle((left, 338, left + 198, 420), fill=panel, outline="#343941")
+        draw.text((left + 14, 352), label, font=_recording_font(11, True), fill=muted)
+        draw.text((left + 14, 378), value[:19], font=_recording_font(17, True), fill=ink)
+
+    policy = snapshot["policy"]
+    identity = str(policy.get("algorithm_id", policy.get("name", "unknown"))).upper()
+    run_id = str(policy.get("training_run_id", "BUILT-IN CONTROLLER"))
+    draw.text((48, 453), identity, font=_recording_font(14, True), fill=accent)
+    draw.text((48, 480), run_id, font=_recording_font(12), fill=muted)
+    if snapshot["q_values"]:
+        values = [float(value) for value in snapshot["q_values"]]
+        maximum = max(abs(value) for value in values) or 1.0
+        for index, value in enumerate(values):
+            left = 590 + index * 78
+            height = abs(value) / maximum * 48
+            draw.rectangle(
+                (left, 502 - height, left + 54, 502),
+                fill=accent if index == snapshot["action"]["id"] else "#59616b",
+            )
+            draw.text((left, 510), f"Q{index}", font=_recording_font(10), fill=muted)
+    return image
+
+
+def record_demo(
+    *,
+    policy_name: str,
+    checkpoint: str | Path | None,
+    seed: int,
+    output: str | Path,
+    max_frames: int = 500,
+) -> Path:
+    """Record one deterministic policy episode as a portable dashboard GIF."""
+
+    if not 2 <= max_frames <= 2_000:
+        raise ValueError("max_frames must be between 2 and 2000")
+    session = DemoSession(policy_name=policy_name, checkpoint=checkpoint, seed=seed)
+    frames: list[Image.Image] = []
+    try:
+        for _ in range(max_frames):
+            session._advance()
+            snapshot = session.snapshot()
+            frames.append(_recording_frame(snapshot))
+            if snapshot["terminated"] or snapshot["truncated"]:
+                break
+    finally:
+        session.close()
+    output = Path(output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    frames[0].save(
+        output,
+        save_all=True,
+        append_images=frames[1:],
+        duration=50,
+        loop=0,
+        disposal=2,
+    )
+    print(f"recorded {len(frames)} frames to {output}")
+    return output
 
 
 def create_server(

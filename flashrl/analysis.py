@@ -13,6 +13,8 @@ from typing import Any
 
 import numpy as np
 
+from flashrl.artifacts import sha256_file
+
 
 def area_under_curve(points: Sequence[tuple[int, float]]) -> float:
     """Integrate a learning curve over environment frames."""
@@ -28,6 +30,23 @@ def area_under_curve(points: Sequence[tuple[int, float]]) -> float:
             for (left_frame, left_value), (right_frame, right_value) in zip(ordered, ordered[1:])
         )
     )
+
+
+def interpolate_learning_curve(
+    points: Sequence[tuple[int, float]], frames: Sequence[int]
+) -> list[tuple[int, float]]:
+    """Linearly align an episodic curve to a common environment-frame grid."""
+
+    if not points:
+        raise ValueError("At least one learning-curve point is required")
+    ordered = sorted(points)
+    if len({frame for frame, _ in ordered}) != len(ordered):
+        raise ValueError("Learning-curve frames must be unique")
+    source_frames = np.asarray([point[0] for point in ordered], dtype=np.float64)
+    source_values = np.asarray([point[1] for point in ordered], dtype=np.float64)
+    targets = np.asarray(frames, dtype=np.float64)
+    values = np.interp(targets, source_frames, source_values)
+    return [(int(frame), float(value)) for frame, value in zip(frames, values, strict=True)]
 
 
 def bootstrap_ci(
@@ -142,6 +161,7 @@ def _collect_runs(run_dir: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
             "best_score": max(scores),
             "learning_auc": area_under_curve(curve),
             "checkpoint_sha256": checkpoint_hash,
+            "manifest_sha256": sha256_file(manifest_path),
             "manifest_path": str(manifest_path),
         }
         runs.append(run)
@@ -211,22 +231,43 @@ def _write_figures(
 ) -> None:
     figure_dir.mkdir(parents=True, exist_ok=True)
     colors = ["#ff7a45", "#4dc9b0", "#73a8ff", "#d28bff", "#f0c75e", "#e8668a"]
-    all_points = [point for run in runs for point in details[str(run["training_run_id"])]["curve"]]
-    maximum_frame = max(frame for frame, _ in all_points) or 1
-    maximum_score = max(score for _, score in all_points) or 1.0
+    learned_runs = [run for run in runs if int(run["train_frames"]) > 0]
+    maximum_frame = max(int(run["train_frames"]) for run in learned_runs) or 1
+    frame_grid = sorted(set(int(value) for value in np.linspace(0, maximum_frame, 121)))
+    aligned: list[tuple[dict[str, Any], list[tuple[int, float]]]] = []
+    for run in learned_runs:
+        points = interpolate_learning_curve(
+            details[str(run["training_run_id"])]["curve"], frame_grid
+        )
+        values = np.asarray([value for _, value in points])
+        window = min(9, len(values))
+        left = window // 2
+        right = window - 1 - left
+        padded = np.pad(values, (left, right), mode="edge")
+        smoothed = np.convolve(padded, np.ones(window) / window, mode="valid")
+        aligned.append(
+            (
+                run,
+                [(frame, float(value)) for frame, value in zip(frame_grid, smoothed, strict=True)],
+            )
+        )
+    maximum_score = max(value for _, points in aligned for _, value in points) or 1.0
     learning = (
         '<line x1="70" y1="460" x2="920" y2="460" class="axis"/>'
         '<line x1="70" y1="70" x2="70" y2="460" class="axis"/>'
     )
-    for index, run in enumerate(runs):
-        points = details[str(run["training_run_id"])]["curve"]
+    for index, (run, points) in enumerate(aligned):
         coordinates = " ".join(
             f"{70 + frame / maximum_frame * 850:.1f},{460 - score / maximum_score * 370:.1f}"
             for frame, score in points
         )
         learning += (
             f'<polyline points="{coordinates}" fill="none" '
-            f'stroke="{colors[index % len(colors)]}" stroke-width="2" opacity=".8"/>'
+            f'stroke="{colors[index % len(colors)]}" stroke-width="3" opacity=".9"/>'
+            f'<rect x="{82 + index * 158}" y="54" width="12" height="4" '
+            f'fill="{colors[index % len(colors)]}"/>'
+            f'<text x="{100 + index * 158}" y="61" class="label">'
+            f"seed {run['training_seed']}</text>"
         )
     learning += (
         f'<text x="840" y="492" class="label">frames {maximum_frame:,}</text>'
@@ -237,7 +278,9 @@ def _write_figures(
         encoding="utf-8",
     )
 
-    evaluation = [row for run in runs for row in details[str(run["training_run_id"])]["evaluation"]]
+    evaluation = [
+        row for run in learned_runs for row in details[str(run["training_run_id"])]["evaluation"]
+    ]
     taxonomy = failure_taxonomy(evaluation)
     failures = ""
     for index, (reason, values) in enumerate(taxonomy.items()):
@@ -254,25 +297,25 @@ def _write_figures(
     )
 
     distributions = ""
+    run_means = {
+        str(run["training_run_id"]): statistics.fmean(
+            float(row["score"]) for row in details[str(run["training_run_id"])]["evaluation"]
+        )
+        for run in runs
+    }
+    maximum_mean = max(run_means.values()) or 1.0
     for index, run in enumerate(runs):
-        scores = [float(row["score"]) for row in details[str(run["training_run_id"])]["evaluation"]]
         x = 90 + index * min(130, 800 / max(1, len(runs)))
-        height = (
-            statistics.fmean(scores)
-            / max(
-                1.0,
-                max(
-                    float(row["score"])
-                    for item in runs
-                    for row in details[str(item["training_run_id"])]["evaluation"]
-                ),
-            )
-            * 330
+        height = run_means[str(run["training_run_id"])] / maximum_mean * 330
+        label = (
+            str(run["algorithm_id"])
+            if int(run["train_frames"]) == 0
+            else f"s{run['training_seed']}"
         )
         distributions += (
             f'<rect x="{x:.1f}" y="{450 - height:.1f}" width="72" height="{height:.1f}" '
             f'fill="{colors[index % len(colors)]}"/>'
-            f'<text x="{x:.1f}" y="476" class="label">s{run["training_seed"]}</text>'
+            f'<text x="{x:.1f}" y="476" class="label">{label}</text>'
         )
     (figure_dir / "score_distributions.svg").write_text(
         _svg_document("Held-out mean score by training seed", distributions),
@@ -298,6 +341,17 @@ def generate_report(
         "",
         f"Source directory: `{run_dir}`",
         "",
+        "## Method",
+        "",
+        "Only finalized manifests with held-out per-episode results are included. "
+        "Scores are averaged within each trained policy first, then independent "
+        "training-run means are summarized across seeds. The 95% interval is a "
+        "seeded 10,000-sample percentile bootstrap over those run means.",
+        "",
+        "Training sample cost is indexed by environment frames. Learning-curve "
+        "area uses the same frame axis, and every published run row carries its "
+        "manifest path and selected checkpoint SHA-256.",
+        "",
         "## Held-out results",
         "",
         "| Algorithm | Runs | Episodes | Mean | 95% CI | Mean AUC |",
@@ -310,12 +364,86 @@ def generate_report(
             f"[{summary['ci95_low']:.2f}, {summary['ci95_high']:.2f}] | "
             f"{summary['mean_learning_auc']:.0f} |"
         )
+    candidates = [
+        summary for summary in summaries if summary["algorithm_id"] not in {"random", "rule"}
+    ]
+    baselines = {
+        str(summary["algorithm_id"]): summary
+        for summary in summaries
+        if summary["algorithm_id"] in {"random", "rule"}
+    }
+    if candidates and baselines:
+        selected = max(candidates, key=lambda summary: float(summary["mean_score"]))
+        lines.extend(["", "## Baseline comparisons", ""])
+        for name in ("random", "rule"):
+            if name not in baselines:
+                continue
+            baseline = baselines[name]
+            candidate_mean = float(selected["mean_score"])
+            baseline_mean = float(baseline["mean_score"])
+            difference = candidate_mean - baseline_mean
+            relative = difference / baseline_mean * 100 if baseline_mean else float("inf")
+            outcome = "beats" if difference > 0 else "does not beat"
+            lines.append(
+                f"- `{selected['algorithm_id']}` {outcome} {name}: "
+                f"{candidate_mean:.2f} vs {baseline_mean:.2f} "
+                f"({difference:+.2f}, {relative:+.1f}%)."
+            )
+        lines.extend(
+            [
+                "",
+                "Confidence intervals above resample independent training-run means. "
+                "A baseline point inside the learned interval is not evidence of a "
+                "reliable learned-policy advantage over that baseline.",
+            ]
+        )
+    if candidates:
+        selected = max(candidates, key=lambda summary: float(summary["mean_score"]))
+        selected_runs = [run for run in runs if run["experiment_id"] == selected["experiment_id"]]
+        selected_details = [
+            row
+            for run in selected_runs
+            for row in details[str(run["training_run_id"])]["evaluation"]
+        ]
+        taxonomy = failure_taxonomy(selected_details)
+        representatives = select_representative_runs(selected_runs)
+        lines.extend(
+            [
+                "",
+                "## Failure taxonomy",
+                "",
+                "Ending reasons across all held-out episodes for the selected learned "
+                "configuration:",
+                "",
+                "| Ending reason | Count | Rate |",
+                "| --- | ---: | ---: |",
+            ]
+        )
+        for reason, values in taxonomy.items():
+            lines.append(f"| {reason} | {values['count']} | {float(values['rate']):.1%} |")
+        lines.extend(["", "## Representative learned runs", ""])
+        for role in ("median", "best"):
+            run = representatives[role]
+            lines.append(
+                f"- **{role.title()}:** `{run['training_run_id']}` "
+                f"(mean {float(run['mean_score']):.2f}, seed {run['training_seed']}, "
+                f"checkpoint `{str(run['checkpoint_sha256'])[:12]}`)."
+            )
+        lines.extend(
+            [
+                "",
+                "Episode scores are averaged within each trained policy before "
+                "independent training-run means are summarized. Learning AUC uses "
+                "environment frames on the x-axis. Checkpoint and manifest identities "
+                "below make every value traceable.",
+            ]
+        )
     lines.extend(
         [
             "",
             "## Run provenance",
             "",
-            "| Run | Seed | Mean | Frames | Checkpoint SHA-256 | Manifest |",
+            "| Run | Seed | Mean | Frames | Checkpoint SHA-256 | Manifest SHA-256 / path |",
             "| --- | ---: | ---: | ---: | --- | --- |",
         ]
     )
@@ -323,7 +451,8 @@ def generate_report(
         lines.append(
             f"| {run['training_run_id']} | {run['training_seed']} | "
             f"{run['mean_score']:.2f} | {run['train_frames']} | "
-            f"`{str(run['checkpoint_sha256'])[:12]}` | `{run['manifest_path']}` |"
+            f"`{str(run['checkpoint_sha256'])[:12]}` | "
+            f"`{str(run['manifest_sha256'])[:12]}` / `{run['manifest_path']}` |"
         )
     lines.append("")
     out.write_text("\n".join(lines), encoding="utf-8")

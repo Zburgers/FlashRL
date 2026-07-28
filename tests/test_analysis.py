@@ -8,6 +8,7 @@ from flashrl.analysis import (
     bootstrap_ci,
     failure_taxonomy,
     generate_report,
+    interpolate_learning_curve,
     select_representative_runs,
     standardized_effect_size,
 )
@@ -16,6 +17,16 @@ from flashrl.analysis import (
 def test_area_under_learning_curve_uses_environment_frames():
     points = [(0, 0.0), (100, 10.0), (200, 10.0)]
     assert area_under_curve(points) == pytest.approx(1_500.0)
+
+
+def test_learning_curve_interpolation_aligns_environment_frames():
+    points = [(0, 0.0), (100, 10.0), (300, 30.0)]
+    assert interpolate_learning_curve(points, [0, 100, 200, 300]) == [
+        (0, 0.0),
+        (100, 10.0),
+        (200, 20.0),
+        (300, 30.0),
+    ]
 
 
 def test_bootstrap_confidence_interval_is_seeded_and_contains_mean():
@@ -120,7 +131,15 @@ def test_report_is_traceable_to_manifests_and_publishes_data(tmp_path):
     report = out.read_text()
     assert "pilot-double-seed0" in report
     assert "random" in report
+    assert "Baseline comparisons" in report
+    assert "beats random" in report
+    assert "Failure taxonomy" in report
+    assert "Representative learned runs" in report
+    assert "## Method" in report
     assert "f" * 12 in report
     assert (published / "pilot_runs.csv").is_file()
+    with (published / "pilot_runs.csv").open(newline="", encoding="utf-8") as fh:
+        assert next(csv.DictReader(fh))["manifest_sha256"]
     assert (published / "pilot_summary.csv").is_file()
     assert (published / "figures" / "learning_curves.svg").is_file()
+    assert "random" in (published / "figures" / "score_distributions.svg").read_text()

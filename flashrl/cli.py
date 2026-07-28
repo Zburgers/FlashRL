@@ -19,7 +19,17 @@ def _run_doctor(args: argparse.Namespace) -> dict:
 
 
 def _run_demo(args: argparse.Namespace) -> None:
-    from flashrl.demo.server import run_demo
+    from flashrl.demo.server import record_demo, run_demo
+
+    if args.record:
+        record_demo(
+            policy_name=args.policy,
+            checkpoint=args.checkpoint or None,
+            seed=args.seed,
+            output=args.record,
+            max_frames=args.max_record_frames,
+        )
+        return
 
     run_demo(
         policy_name=args.policy,
@@ -99,6 +109,8 @@ def build_parser() -> argparse.ArgumentParser:
     demo_parser.add_argument("--host", default="127.0.0.1")
     demo_parser.add_argument("--port", type=int, default=8765)
     demo_parser.add_argument("--no-open", action="store_true")
+    demo_parser.add_argument("--record", type=Path, default=None)
+    demo_parser.add_argument("--max-record-frames", type=int, default=500)
     demo_parser.set_defaults(handler=_run_demo)
 
     experiment_parser = commands.add_parser(
