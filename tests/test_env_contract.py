@@ -77,6 +77,16 @@ def test_state_observation_distinguishes_bird_altitude():
     assert not np.array_equal(low_bird, high_bird)
 
 
+def test_state_steps_do_not_pay_pixel_rendering_cost(monkeypatch):
+    env = DinoEnv(obs_mode="state", backend="sim", seed=3)
+
+    def unexpected_render():
+        raise AssertionError("state observations should not render pixels")
+
+    monkeypatch.setattr(env, "_render_frame", unexpected_render)
+    env.step(0)
+
+
 @pytest.mark.parametrize("obs_mode", ["state", "vision", "hybrid"])
 def test_long_successful_episode_stays_inside_observation_space(obs_mode):
     env = DinoEnv(

@@ -186,9 +186,10 @@ class DinoEnv(gym.Env):
         self._next_spawn_x = 420.0
         self._spawn_obstacle(initial=True)
         self._frames.clear()
-        frame = self._render_frame()
-        for _ in range(self.frame_stack):
-            self._frames.append(frame)
+        if self.obs_mode != "state":
+            frame = self._render_frame()
+            for _ in range(self.frame_stack):
+                self._frames.append(frame)
 
     def _spawn_obstacle(self, initial: bool = False) -> None:
         spacing = float(self._rng.integers(220, 420))
@@ -265,7 +266,8 @@ class DinoEnv(gym.Env):
             "obstacle_cleared": obstacle_cleared,
             "crash": crash_penalty,
         }
-        self._frames.append(self._render_frame())
+        if self.obs_mode != "state":
+            self._frames.append(self._render_frame())
         return reward, crashed, reward_terms
 
     def _detect_collision(self) -> bool:
