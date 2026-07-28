@@ -69,6 +69,27 @@ Obstacle altitude prevents perceptual aliasing between low birds that require
 ducking and high birds that are safe to ignore. Raw score and `crashed` are not
 policy inputs: score belongs in `info`, while crashes use `terminated`.
 
+Feature units and transforms are fixed by observation schema V2:
+
+| Feature | Simulator unit | Observation transform | Declared range |
+| --- | --- | --- | --- |
+| `trex_y` | pixels above ground | `y / 120` | `[0, 1]` |
+| `trex_velocity_y` | pixels per step | `velocity / 20` | `[-1, 1]` |
+| `is_jumping` | boolean | `float(value)` | `[0, 1]` |
+| `is_ducking` | boolean | `float(value)` | `[0, 1]` |
+| `game_speed` | simulator speed | `speed / 13` | `[0, 1]` |
+| `distance_to_next_obstacle` | horizontal pixels | `x / 600` | `[-0.1, 2]` |
+| `next_obstacle_width` | pixels | `width / 60` | `[0, 1]` |
+| `next_obstacle_height` | pixels | `height / 80` | `[0, 1]` |
+| `next_obstacle_type_id` | `0`, `1`, or `2` | `type_id / 2` | `[0, 1]` |
+| `next_obstacle_bottom` | pixels above ground | `bottom / 80` | `[0, 1]` |
+| `next_obstacle_top` | pixels above ground | `top / 100` | `[0, 1.2]` |
+| `second_obstacle_distance` | horizontal pixels | `x / 900` | `[-0.1, 2]` |
+
+Feature-specific arrays `STATE_LOW` and `STATE_HIGH` define these bounds.
+Long-horizon tests disable collisions and verify all three observation modes
+for the full configured time limit.
+
 ### Vision Mode
 
 Purpose: pixel-based RL over deterministic simulator renderings.

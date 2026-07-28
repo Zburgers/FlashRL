@@ -121,6 +121,13 @@ def select_action(model, obs, env, epsilon: float, device: torch.device) -> int:
     return int(q_values.argmax(dim=1).item())
 
 
+def validate_observation(env: DinoEnv, obs: Any, context: str) -> None:
+    """Reject corrupt simulator output before inference or replay insertion."""
+
+    if not env.observation_space.contains(obs):
+        raise RuntimeError(f"Invalid observation during {context}: outside {env.observation_space}")
+
+
 def compute_td_target(
     rewards: torch.Tensor,
     discounts: torch.Tensor,
@@ -434,6 +441,7 @@ def train_dqn(cfg: DQNConfig, resume_path: str | Path | None = None) -> dict[str
             writer.writeheader()
         for episode in range(start_episode, cfg.episodes):
             obs, _ = env.reset(seed=cfg.seed + episode)
+            validate_observation(env, obs, "reset")
             episode_reward = 0.0
             losses: list[float] = []
             done = False
@@ -442,6 +450,7 @@ def train_dqn(cfg: DQNConfig, resume_path: str | Path | None = None) -> dict[str
                 epsilon = epsilon_by_step(total_steps, cfg)
                 action = select_action(policy_net, obs, env, epsilon, device)
                 next_obs, reward, terminated, truncated, info = env.step(action)
+                validate_observation(env, next_obs, "step")
                 done = terminated or truncated
                 transition = Transition(
                     obs=obs,

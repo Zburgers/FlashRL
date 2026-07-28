@@ -46,6 +46,7 @@ RESULT_FIELDS = [
     "train_frames",
     "wall_clock_train_s",
     "wall_clock_episode_s",
+    "wall_clock_evaluation_total_s",
     "checkpoint_role",
     "checkpoint_path",
     "checkpoint_sha256",

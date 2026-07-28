@@ -32,4 +32,6 @@ def test_checkpoint_evaluation_propagates_training_identity(tmp_path):
     assert first["episode_seed"] == 8_000
     assert second["episode_seed"] == 8_001
     assert first["wall_clock_episode_s"] >= 0
+    assert first["wall_clock_evaluation_total_s"] >= first["wall_clock_episode_s"]
+    assert first["wall_clock_evaluation_total_s"] == second["wall_clock_evaluation_total_s"]
     assert "wall_clock_eval_s" not in first

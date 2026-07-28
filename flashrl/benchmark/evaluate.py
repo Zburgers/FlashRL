@@ -68,6 +68,7 @@ def evaluate_policy(
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     identity = identity or {}
+    evaluation_started = time.perf_counter()
     for episode in range(episodes):
         episode_seed = eval_seed + episode
         episode_started = time.perf_counter()
@@ -117,12 +118,16 @@ def evaluate_policy(
                 "train_frames": identity.get("train_frames", train_frames),
                 "wall_clock_train_s": identity.get("wall_clock_train_s", wall_clock_train_s),
                 "wall_clock_episode_s": time.perf_counter() - episode_started,
+                "wall_clock_evaluation_total_s": 0.0,
                 "checkpoint_role": identity.get("checkpoint_role", ""),
                 "checkpoint_path": checkpoint_path,
                 "checkpoint_sha256": identity.get("checkpoint_sha256", ""),
                 "manifest_path": identity.get("manifest_path", config_path),
             }
         )
+    evaluation_total = time.perf_counter() - evaluation_started
+    for row in rows:
+        row["wall_clock_evaluation_total_s"] = evaluation_total
     return rows
 
 
